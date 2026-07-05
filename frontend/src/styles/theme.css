@@ -1,0 +1,18 @@
+:root{
+    --roxo:#4A315C;
+    --roxoEscuro:#2D1F39;
+    --dourado:#C89B3C;
+    --creme:#F5F1E8;
+    --branco:#FFFFFF;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    background:var(--creme);
+}
