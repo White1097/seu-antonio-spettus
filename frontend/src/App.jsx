@@ -5,9 +5,12 @@ import Comanda from './pages/Comanda/Comanda';
 import Historico from './pages/Historico/Historico';
 import Produtos from './pages/Produtos/Produtos';
 
+const API_URL = 'https://seu-antonio-spettus-backend.onrender.com';
+
 function App() {
     const [pagina, setPagina] = useState('dashboard');
     const [mesaSelecionada, setMesaSelecionada] = useState(null);
+
     const [produtos, setProdutos] = useState([]);
     const [vendas, setVendas] = useState([]);
 
@@ -34,7 +37,7 @@ function App() {
     }, [comandas]);
 
     async function buscarProdutos() {
-        const resposta = await fetch('http://localhost:3000/produtos');
+        const resposta = await fetch(`${API_URL}/produtos`);
         const dados = await resposta.json();
 
         setProdutos(
@@ -46,7 +49,7 @@ function App() {
     }
 
     async function buscarVendas() {
-        const resposta = await fetch('http://localhost:3000/vendas');
+        const resposta = await fetch(`${API_URL}/vendas`);
         const dados = await resposta.json();
 
         const vendasFormatadas = dados.map(venda => ({
@@ -74,9 +77,11 @@ function App() {
     async function limparHistorico() {
         const confirmar = confirm('Deseja apagar todo o histórico de vendas?');
 
-        if (!confirmar) return;
+        if (!confirmar) {
+            return;
+        }
 
-        await fetch('http://localhost:3000/vendas', {
+        await fetch(`${API_URL}/vendas`, {
             method: 'DELETE'
         });
 
@@ -107,9 +112,11 @@ function App() {
             pagamento
         };
 
-        await fetch('http://localhost:3000/vendas', {
+        await fetch(`${API_URL}/vendas`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(venda)
         });
 
