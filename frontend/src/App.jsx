@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import Dashboard from './pages/Dashboard/Dashboard';
-import Comanda from './pages/Comanda/Comanda';
+import Comanda from './pages/comanda/Comanda';
 import Historico from './pages/Historico/Historico';
 import Produtos from './pages/Produtos/Produtos';
 
