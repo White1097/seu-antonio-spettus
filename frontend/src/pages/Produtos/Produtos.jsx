@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import './Produtos.css';
 
+const API_URL = 'https://seu-antonio-spettus-backend.onrender.com';
+
 function Produtos({ produtos, setProdutos, voltarDashboard }) {
     const [nome, setNome] = useState('');
     const [preco, setPreco] = useState('');
@@ -8,7 +10,7 @@ function Produtos({ produtos, setProdutos, voltarDashboard }) {
     const [editandoId, setEditandoId] = useState(null);
 
     async function carregarProdutos() {
-        const resposta = await fetch('http://localhost:3000/produtos');
+        const resposta = await fetch(`${API_URL}/produtos`);
         const dados = await resposta.json();
 
         setProdutos(
@@ -39,7 +41,7 @@ function Produtos({ produtos, setProdutos, voltarDashboard }) {
         };
 
         if (editandoId) {
-            await fetch(`http://localhost:3000/produtos/${editandoId}`, {
+            await fetch(`${API_URL}/produtos/${editandoId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -47,7 +49,7 @@ function Produtos({ produtos, setProdutos, voltarDashboard }) {
                 body: JSON.stringify(produto)
             });
         } else {
-            await fetch('http://localhost:3000/produtos', {
+            await fetch(`${API_URL}/produtos`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -74,7 +76,7 @@ function Produtos({ produtos, setProdutos, voltarDashboard }) {
             return;
         }
 
-        await fetch(`http://localhost:3000/produtos/${id}`, {
+        await fetch(`${API_URL}/produtos/${id}`, {
             method: 'DELETE'
         });
 
@@ -102,6 +104,7 @@ function Produtos({ produtos, setProdutos, voltarDashboard }) {
 
                 <input
                     type="number"
+                    step="0.01"
                     placeholder="Preço"
                     value={preco}
                     onChange={evento => setPreco(evento.target.value)}
@@ -130,16 +133,11 @@ function Produtos({ produtos, setProdutos, voltarDashboard }) {
 
             <div className="lista-produtos-admin">
                 {produtos.map(produto => (
-                    <div
-                        className="produto-admin"
-                        key={produto.id}
-                    >
+                    <div className="produto-admin" key={produto.id}>
                         <div>
                             <h2>{produto.nome}</h2>
                             <p>{produto.categoria}</p>
-                            <strong>
-                                R$ {produto.preco.toFixed(2)}
-                            </strong>
+                            <strong>R$ {Number(produto.preco).toFixed(2)}</strong>
                         </div>
 
                         <div className="acoes-produto">
