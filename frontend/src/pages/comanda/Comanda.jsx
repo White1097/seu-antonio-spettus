@@ -3,7 +3,7 @@ import './Comanda.css';
 
 function Comanda({
     numeroMesa,
-    itens,
+    comanda,
     produtos,
     atualizarComanda,
     fecharConta,
@@ -11,87 +11,132 @@ function Comanda({
 }) {
     const [fechandoConta, setFechandoConta] = useState(false);
     const [busca, setBusca] = useState('');
-    const [cliente, setCliente] = useState('');
-    const [desconto, setDesconto] = useState(0);
-    const [acrescimo, setAcrescimo] = useState(0);
+
+    const itens = comanda?.itens || [];
+    const cliente = comanda?.cliente || '';
+    const desconto = Number(comanda?.desconto || 0);
+    const acrescimo = Number(comanda?.acrescimo || 0);
 
     function adicionarItem(produto) {
-        const itemExistente = itens.find(item => item.id === produto.id);
+        const itemExistente = itens.find(
+            item => Number(item.id) === Number(produto.id)
+        );
+
+        let novosItens;
 
         if (itemExistente) {
-            atualizarComanda(
-                numeroMesa,
-                itens.map(item =>
-                    item.id === produto.id
-                        ? { ...item, quantidade: item.quantidade + 1 }
-                        : item
-                )
+            novosItens = itens.map(item =>
+                Number(item.id) === Number(produto.id)
+                    ? {
+                        ...item,
+                        quantidade: Number(item.quantidade) + 1
+                    }
+                    : item
             );
         } else {
-            atualizarComanda(numeroMesa, [
+            novosItens = [
                 ...itens,
                 {
-                    id: produto.id,
+                    id: Number(produto.id),
                     nome: produto.nome,
                     preco: Number(produto.preco),
                     quantidade: 1,
                     observacao: ''
                 }
-            ]);
+            ];
         }
+
+        atualizarComanda(numeroMesa, {
+            itens: novosItens
+        });
     }
 
     function diminuirItem(id) {
-        atualizarComanda(
-            numeroMesa,
-            itens
-                .map(item =>
-                    item.id === id
-                        ? { ...item, quantidade: item.quantidade - 1 }
-                        : item
-                )
-                .filter(item => item.quantidade > 0)
-        );
+        const novosItens = itens
+            .map(item =>
+                Number(item.id) === Number(id)
+                    ? {
+                        ...item,
+                        quantidade: Number(item.quantidade) - 1
+                    }
+                    : item
+            )
+            .filter(item => Number(item.quantidade) > 0);
+
+        atualizarComanda(numeroMesa, {
+            itens: novosItens
+        });
     }
 
     function alterarObservacao(id, observacao) {
-        atualizarComanda(
-            numeroMesa,
-            itens.map(item =>
-                item.id === id
-                    ? { ...item, observacao }
-                    : item
-            )
+        const novosItens = itens.map(item =>
+            Number(item.id) === Number(id)
+                ? {
+                    ...item,
+                    observacao
+                }
+                : item
         );
-    }
 
-    function aplicarPorcentagem(porcentagem) {
-        const valor = subtotal * porcentagem;
-
-        setAcrescimo(valor.toFixed(2));
+        atualizarComanda(numeroMesa, {
+            itens: novosItens
+        });
     }
 
     const subtotal = itens.reduce((soma, item) => {
-        return soma + Number(item.preco) * item.quantidade;
+        return (
+            soma +
+            Number(item.preco) * Number(item.quantidade)
+        );
     }, 0);
 
     const total = Math.max(
-        subtotal - Number(desconto || 0) + Number(acrescimo || 0),
+        subtotal - desconto + acrescimo,
         0
     );
 
+    function aplicarAcrescimo10() {
+        atualizarComanda(numeroMesa, {
+            desconto: 0,
+            acrescimo: Number((subtotal * 0.10).toFixed(2))
+        });
+    }
+
+    function aplicarDesconto20() {
+        atualizarComanda(numeroMesa, {
+            desconto: Number((subtotal * 0.20).toFixed(2)),
+            acrescimo: 0
+        });
+    }
+
+    function removerPorcentagens() {
+        atualizarComanda(numeroMesa, {
+            desconto: 0,
+            acrescimo: 0
+        });
+    }
+
     const produtosFiltrados = produtos.filter(produto =>
-        produto.nome.toLowerCase().includes(busca.toLowerCase())
+        produto.nome
+            .toLowerCase()
+            .includes(busca.toLowerCase())
     );
 
     const categorias = [
-        ...new Set(produtosFiltrados.map(produto => produto.categoria))
+        ...new Set(
+            produtosFiltrados.map(produto => produto.categoria)
+        )
     ];
 
     return (
         <div className="comanda">
+
             <div className="comanda-topo">
-                <button className="botao-voltar" onClick={voltarDashboard}>
+
+                <button
+                    className="botao-voltar"
+                    onClick={voltarDashboard}
+                >
                     ← Voltar
                 </button>
 
@@ -102,120 +147,204 @@ function Comanda({
                     type="text"
                     placeholder="Nome do cliente (opcional)"
                     value={cliente}
-                    onChange={evento => setCliente(evento.target.value)}
+                    onChange={evento =>
+                        atualizarComanda(numeroMesa, {
+                            cliente: evento.target.value
+                        })
+                    }
                 />
+
             </div>
 
             <div className="area-comanda">
+
                 <div className="lista-produtos">
+
                     <input
                         className="busca-produtos"
                         type="text"
                         placeholder="Buscar produto..."
                         value={busca}
-                        onChange={evento => setBusca(evento.target.value)}
+                        onChange={evento =>
+                            setBusca(evento.target.value)
+                        }
                     />
 
-                    {categorias.map(categoria => (
-                        <div key={categoria}>
-                            <h2>{categoria}</h2>
+                    {produtosFiltrados.length === 0 ? (
+                        <p className="sem-produtos">
+                            Nenhum produto encontrado.
+                        </p>
+                    ) : (
+                        categorias.map(categoria => (
+                            <div key={categoria}>
 
-                            <div className="produtos">
-                                {produtosFiltrados
-                                    .filter(produto => produto.categoria === categoria)
-                                    .map(produto => (
-                                        <button
-                                            key={produto.id}
-                                            onClick={() => adicionarItem(produto)}
-                                        >
-                                            {produto.nome} - R$ {Number(produto.preco).toFixed(2)}
-                                        </button>
-                                    ))}
+                                <h2>{categoria}</h2>
+
+                                <div className="produtos">
+
+                                    {produtosFiltrados
+                                        .filter(
+                                            produto =>
+                                                produto.categoria === categoria
+                                        )
+                                        .map(produto => (
+                                            <button
+                                                key={produto.id}
+                                                onClick={() =>
+                                                    adicionarItem(produto)
+                                                }
+                                            >
+                                                {produto.nome}
+                                                {' - '}
+                                                R$ {Number(
+                                                    produto.preco
+                                                ).toFixed(2)}
+                                            </button>
+                                        ))}
+
+                                </div>
+
                             </div>
-                        </div>
-                    ))}
+                        ))
+                    )}
+
                 </div>
 
                 <div className="comanda-card">
+
                     <h2>Pedido</h2>
 
                     {itens.length === 0 ? (
                         <p>Nenhum item adicionado.</p>
                     ) : (
-                        itens.map((item, index) => (
-                            <div className="item-pedido" key={index}>
+                        itens.map(item => (
+                            <div
+                                className="item-pedido"
+                                key={item.id}
+                            >
                                 <div className="info-item">
+
                                     <span>
-                                        {item.quantidade}x {item.nome} - R$ {(Number(item.preco) * item.quantidade).toFixed(2)}
+                                        {item.quantidade}x {item.nome}
+                                        {' - '}
+                                        R$ {(
+                                            Number(item.preco) *
+                                            Number(item.quantidade)
+                                        ).toFixed(2)}
                                     </span>
 
                                     <input
                                         className="observacao-item"
                                         type="text"
                                         placeholder="Observação..."
-                                        value={item.observacao}
+                                        value={item.observacao || ''}
                                         onChange={evento =>
-                                            alterarObservacao(item.id, evento.target.value)
+                                            alterarObservacao(
+                                                item.id,
+                                                evento.target.value
+                                            )
                                         }
                                     />
+
                                 </div>
 
                                 <div className="acoes-item">
-                                    <button onClick={() => diminuirItem(item.id)}>
+
+                                    <button
+                                        onClick={() =>
+                                            diminuirItem(item.id)
+                                        }
+                                    >
                                         −
                                     </button>
 
-                                    <button onClick={() => adicionarItem(item)}>
+                                    <button
+                                        onClick={() =>
+                                            adicionarItem(item)
+                                        }
+                                    >
                                         +
                                     </button>
+
                                 </div>
                             </div>
                         ))
                     )}
 
                     <div className="ajustes-conta">
+
                         <label>
                             Desconto R$
+
                             <input
                                 type="number"
                                 min="0"
                                 step="0.01"
                                 value={desconto}
-                                onChange={evento => setDesconto(evento.target.value)}
+                                onChange={evento =>
+                                    atualizarComanda(numeroMesa, {
+                                        desconto: Number(
+                                            evento.target.value || 0
+                                        )
+                                    })
+                                }
                             />
                         </label>
 
                         <label>
                             Acréscimo R$
+
                             <input
                                 type="number"
                                 min="0"
                                 step="0.01"
                                 value={acrescimo}
-                                onChange={evento => setAcrescimo(evento.target.value)}
+                                onChange={evento =>
+                                    atualizarComanda(numeroMesa, {
+                                        acrescimo: Number(
+                                            evento.target.value || 0
+                                        )
+                                    })
+                                }
                             />
                         </label>
+
                     </div>
 
                     <div className="botoes-porcentagem">
-                        <button onClick={() => aplicarPorcentagem(0.10)}>
+
+                        <button onClick={aplicarAcrescimo10}>
                             +10%
                         </button>
 
-                        <button onClick={() => aplicarPorcentagem(0.20)}>
-                            +20%
+                        <button onClick={aplicarDesconto20}>
+                            −20%
                         </button>
 
-                        <button onClick={() => setAcrescimo(0)}>
+                        <button onClick={removerPorcentagens}>
                             Remover %
                         </button>
+
                     </div>
 
                     <div className="total-comanda">
-                        <p>Subtotal: R$ {subtotal.toFixed(2)}</p>
-                        <p>Desconto: R$ {Number(desconto || 0).toFixed(2)}</p>
-                        <p>Acréscimo: R$ {Number(acrescimo || 0).toFixed(2)}</p>
-                        <h2>Total: R$ {total.toFixed(2)}</h2>
+
+                        <p>
+                            Subtotal: R$ {subtotal.toFixed(2)}
+                        </p>
+
+                        <p>
+                            Desconto: R$ {desconto.toFixed(2)}
+                        </p>
+
+                        <p>
+                            Acréscimo: R$ {acrescimo.toFixed(2)}
+                        </p>
+
+                        <h2>
+                            Total: R$ {total.toFixed(2)}
+                        </h2>
+
                     </div>
 
                     {!fechandoConta ? (
@@ -228,35 +357,47 @@ function Comanda({
                         </button>
                     ) : (
                         <div className="pagamento">
+
                             <h2>Forma de pagamento</h2>
 
-                            {['PIX', 'Dinheiro', 'Cartão'].map(forma => (
-                                <button
-                                    key={forma}
-                                    onClick={() =>
-                                        fecharConta(numeroMesa, forma, {
-                                            cliente,
-                                            subtotal,
-                                            desconto: Number(desconto || 0),
-                                            acrescimo: Number(acrescimo || 0),
-                                            total
-                                        })
-                                    }
-                                >
-                                    {forma}
-                                </button>
-                            ))}
+                            {['PIX', 'Dinheiro', 'Cartão'].map(
+                                forma => (
+                                    <button
+                                        key={forma}
+                                        onClick={() =>
+                                            fecharConta(
+                                                numeroMesa,
+                                                forma,
+                                                {
+                                                    subtotal,
+                                                    desconto,
+                                                    acrescimo,
+                                                    total
+                                                }
+                                            )
+                                        }
+                                    >
+                                        {forma}
+                                    </button>
+                                )
+                            )}
 
                             <button
                                 className="botao-cancelar"
-                                onClick={() => setFechandoConta(false)}
+                                onClick={() =>
+                                    setFechandoConta(false)
+                                }
                             >
                                 Cancelar
                             </button>
+
                         </div>
                     )}
+
                 </div>
+
             </div>
+
         </div>
     );
 }
