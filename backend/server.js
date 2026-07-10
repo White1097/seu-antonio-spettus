@@ -6,6 +6,7 @@ const db = require('./config/database');
 
 const produtosRoutes = require('./routes/produtos');
 const vendasRoutes = require('./routes/vendas');
+const comandasRoutes = require('./routes/comandas');
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 
 app.use('/produtos', produtosRoutes);
 app.use('/vendas', vendasRoutes);
+app.use('/comandas', comandasRoutes);
 
 app.get('/', (req, res) => {
     res.json({
@@ -33,6 +35,8 @@ app.get('/teste-banco', async (req, res) => {
             horario: resultado.rows[0].horario
         });
     } catch (erro) {
+        console.error('Erro no banco:', erro);
+
         res.status(500).json({
             banco: 'erro',
             mensagem: erro.message
@@ -58,8 +62,10 @@ async function iniciarServidor() {
             console.log('');
         });
     } catch (erro) {
+        console.error('');
         console.error('ERRO AO CONECTAR COM O POSTGRESQL');
         console.error(erro.message);
+        console.error('');
     }
 }
 
