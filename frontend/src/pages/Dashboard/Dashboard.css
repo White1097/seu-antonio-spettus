@@ -124,3 +124,41 @@
     font-weight:bold;
     cursor:pointer;
 }
+
+/* =====================================================
+   REFINAMENTO DO PAINEL LATERAL
+===================================================== */
+
+.dashboard-painel-lateral{
+    border:1px solid #e7ddd1;
+    background:
+        radial-gradient(
+            circle at 90% 10%,
+            rgba(212,175,55,.13),
+            transparent 25%
+        ),
+        #ffffff;
+}
+
+.dashboard-painel-titulo{
+    padding-bottom:18px;
+    border-bottom:1px solid #eee5db;
+}
+
+.dashboard-indicador{
+    padding:18px 0;
+}
+
+.dashboard-indicador strong{
+    font-size:24px;
+    font-weight:900;
+}
+
+.dashboard-botao-historico{
+    background:
+        linear-gradient(
+            135deg,
+            #3A083E,
+            #5c1262
+        );
+}
