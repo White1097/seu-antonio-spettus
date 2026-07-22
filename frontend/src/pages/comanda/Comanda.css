@@ -132,15 +132,46 @@
     gap:18px;
 }
 
+/* =====================================================
+   CORREÇÃO — BARRA DE CATEGORIAS
+   Mantém somente a rolagem horizontal.
+===================================================== */
 .comanda2-categorias{
+    width:100%;
+    min-width:0;
+    min-height:70px;
     display:flex;
+    align-items:center;
+    flex-wrap:nowrap;
     gap:10px;
     padding:14px;
     overflow-x:auto;
+    overflow-y:hidden;
+    overscroll-behavior-x:contain;
+    white-space:nowrap;
     border:1px solid #eadfce;
     border-radius:16px;
     background:#fff;
     box-shadow:0 10px 28px rgba(58,8,62,.05);
+    scrollbar-width:thin;
+    scrollbar-gutter:stable;
+}
+
+.comanda2-categorias::-webkit-scrollbar{
+    height:8px;
+}
+
+.comanda2-categorias::-webkit-scrollbar-track{
+    background:transparent;
+}
+
+.comanda2-categorias::-webkit-scrollbar-thumb{
+    border-radius:999px;
+    background:rgba(58,8,62,.42);
+}
+
+.comanda2-categorias::-webkit-scrollbar-thumb:hover{
+    background:rgba(58,8,62,.62);
 }
 
 .comanda2-categoria{
@@ -152,6 +183,7 @@
     background:#fff;
     color:#756a72;
     font-weight:800;
+    white-space:nowrap;
     cursor:pointer;
     transition:
         transform .2s ease,
@@ -785,6 +817,7 @@
         border-color .2s ease,
         box-shadow .2s ease;
 }
+
 /* Mantém o resumo e o botão de fechamento sempre acessíveis no desktop. */
 @media (min-width: 901px) {
     .comanda2-direita {
@@ -821,12 +854,14 @@
 .comanda2-grid-produtos { align-content: start; }
 .comanda2-resumo { overflow: visible; padding-bottom: 24px; }
 .comanda2-finalizar { position: static; display: block; margin-bottom: 0; }
+
 @media (min-width: 1201px) {
-  .comanda2-direita { max-height: calc(100vh - 150px); }
+    .comanda2-direita { max-height: calc(100vh - 150px); }
 }
+
 @media (max-width: 1200px) {
-  .comanda2-layout { grid-template-columns: 1fr; }
-  .comanda2-direita { max-height: none; overflow: visible; }
+    .comanda2-layout { grid-template-columns: 1fr; }
+    .comanda2-direita { max-height: none; overflow: visible; }
 }
 
 /* =====================================================
@@ -911,7 +946,6 @@
         overflow:visible;
     }
 }
-
 
 /* =====================================================
    V1.0.4 — estabilidade do painel da comanda
