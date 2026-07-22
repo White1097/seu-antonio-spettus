@@ -1,0 +1,121 @@
+@keyframes aparecer {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes subirSuave {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes descerSuave {
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes ampliarSuave {
+    from {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes girar {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulsar {
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.55;
+    }
+}
+
+@keyframes skeletonCarregando {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.animacao-aparecer {
+    animation: aparecer var(--transicao-lenta) both;
+}
+
+.animacao-subir {
+    animation: subirSuave var(--transicao-lenta) both;
+}
+
+.animacao-descer {
+    animation: descerSuave var(--transicao-lenta) both;
+}
+
+.animacao-ampliar {
+    animation: ampliarSuave var(--transicao-padrao) both;
+}
+
+.carregando-girar {
+    animation: girar 0.8s linear infinite;
+}
+
+.carregando-pulsar {
+    animation: pulsar 1.4s ease-in-out infinite;
+}
+
+.skeleton {
+    min-height: 18px;
+    border-radius: var(--raio-sm);
+    background:
+        linear-gradient(
+            90deg,
+            #eeeeee 25%,
+            #f7f7f7 50%,
+            #eeeeee 75%
+        );
+    background-size: 200% 100%;
+    animation: skeletonCarregando 1.4s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

@@ -1,4 +1,10 @@
-import { useEffect, useState } from 'react';
+import {
+    useCallback,
+    useEffect,
+    useRef,
+    useState
+} from 'react';
+
 import {
     Navigate,
     Route,
@@ -10,27 +16,49 @@ import Comanda from './pages/comanda/Comanda';
 import Historico from './pages/Historico/Historico';
 import Produtos from './pages/Produtos/Produtos';
 import Login from './pages/Login/Login';
+import Funcionarios from './pages/Funcionarios/Funcionarios';
+import Caixa from './pages/Caixa/Caixa';
+import Relatorios from './pages/Relatorios/Relatorios';
+import PainelExecutivo from './pages/PainelExecutivo/PainelExecutivo';
+import GerenciarMesas from './pages/Configuracoes/Mesas/GerenciarMesas';
+import Aparencia from './pages/Configuracoes/Aparencia/Aparencia';
 
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
+import Layout from './components/Layout/Layout';
+
 import { useAuth } from './context/AuthContext';
+import { useComandas } from './hooks/useComandas';
+import { useVendas } from './hooks/useVendas';
 
-const API_URL =
-    'https://seu-antonio-spettus-backend.onrender.com';
+import {
+    excluirComanda,
+    salvarComanda
+} from './services/comandas';
 
-function criarComandasVazias() {
-    const comandasVazias = {};
+import {
+    listarProdutos
+} from './services/produtos';
 
-    for (let mesa = 1; mesa <= 10; mesa += 1) {
-        comandasVazias[mesa] = {
-            mesa,
-            cliente: '',
-            itens: [],
-            desconto: 0,
-            acrescimo: 0
-        };
-    }
+import {
+    apagarHistorico,
+    registrarVenda
+} from './services/vendas';
 
-    return comandasVazias;
+function TelaCarregamento() {
+    return (
+        <div
+            style={{
+                minHeight: '100vh',
+                display: 'grid',
+                placeItems: 'center',
+                background: 'var(--cor-fundo)',
+                color: 'var(--cor-texto)',
+                fontWeight: '800'
+            }}
+        >
+            Carregando...
+        </div>
+    );
 }
 
 function RotaLogin() {
@@ -40,20 +68,7 @@ function RotaLogin() {
     } = useAuth();
 
     if (loading) {
-        return (
-            <div
-                style={{
-                    minHeight: '100vh',
-                    display: 'grid',
-                    placeItems: 'center',
-                    background: '#f8f4eb',
-                    color: '#351c32',
-                    fontWeight: '800'
-                }}
-            >
-                Carregando...
-            </div>
-        );
+        return <TelaCarregamento />;
     }
 
     if (autenticado) {
@@ -73,259 +88,94 @@ function SistemaAtual() {
         cargo
     } = useAuth();
 
-    const [pagina, setPagina] =
-        useState('dashboard');
+    const {
+        comandas,
+        carregando: carregandoComandas,
+        erro: erroComandas,
+        obterComanda,
+        atualizarComandaLocal,
+        removerComandaLocal,
+        atualizarComandas
+    } = useComandas();
 
-    const [mesaSelecionada, setMesaSelecionada] =
-        useState(null);
+    const {
+        vendas,
+        carregando: carregandoVendas,
+        erro: erroVendas,
+        atualizarVendas
+    } = useVendas();
 
-    const [produtos, setProdutos] =
-        useState([]);
+    const salvamentosPendentes = useRef(new Map());
 
-    const [vendas, setVendas] =
-        useState([]);
+    const [
+        pagina,
+        setPagina
+    ] = useState('dashboard');
 
-    const [comandas, setComandas] =
-        useState(criarComandasVazias);
+    const [
+        mesaSelecionada,
+        setMesaSelecionada
+    ] = useState(null);
+
+    const [
+        produtos,
+        setProdutos
+    ] = useState([]);
+
+    const [
+        carregandoProdutos,
+        setCarregandoProdutos
+    ] = useState(true);
+
+    const [
+        erroProdutos,
+        setErroProdutos
+    ] = useState('');
+
+    const buscarProdutos =
+        useCallback(async () => {
+            try {
+                setCarregandoProdutos(true);
+                setErroProdutos('');
+
+                const dados =
+                    await listarProdutos({
+                        incluirInativos: false
+                    });
+
+                setProdutos(dados);
+            } catch (erro) {
+                console.error(
+                    'Erro ao carregar produtos:',
+                    erro
+                );
+
+                setErroProdutos(
+                    erro.message ||
+                    'Não foi possível carregar os produtos.'
+                );
+            } finally {
+                setCarregandoProdutos(false);
+            }
+        }, []);
 
     useEffect(() => {
         buscarProdutos();
-        buscarVendas();
-        buscarComandas();
+    }, [buscarProdutos]);
 
-        const atualizacaoAutomatica =
-            setInterval(() => {
-                buscarComandas();
-                buscarVendas();
-            }, 3000);
+    const carregandoSistema =
+        carregandoComandas ||
+        carregandoVendas ||
+        carregandoProdutos;
 
-        function atualizarAoVoltarParaAba() {
-            if (
-                document.visibilityState ===
-                'visible'
-            ) {
-                buscarComandas();
-                buscarVendas();
-            }
-        }
+    const erroSistema =
+        erroComandas ||
+        erroVendas ||
+        erroProdutos;
 
-        document.addEventListener(
-            'visibilitychange',
-            atualizarAoVoltarParaAba
-        );
-
-        return () => {
-            clearInterval(
-                atualizacaoAutomatica
-            );
-
-            document.removeEventListener(
-                'visibilitychange',
-                atualizarAoVoltarParaAba
-            );
-        };
-    }, []);
-
-    async function buscarProdutos() {
-        try {
-            const resposta = await fetch(
-                `${API_URL}/produtos`
-            );
-
-            if (!resposta.ok) {
-                throw new Error(
-                    'Não foi possível buscar os produtos.'
-                );
-            }
-
-            const dados =
-                await resposta.json();
-
-            const produtosFormatados =
-                dados.map(produto => ({
-                    ...produto,
-                    preco: Number(
-                        produto.preco
-                    )
-                }));
-
-            setProdutos(
-                produtosFormatados
-            );
-        } catch (erro) {
-            console.error(
-                'Erro ao buscar produtos:',
-                erro
-            );
-        }
-    }
-
-    async function buscarVendas() {
-        try {
-            const resposta = await fetch(
-                `${API_URL}/vendas`
-            );
-
-            if (!resposta.ok) {
-                throw new Error(
-                    'Não foi possível buscar as vendas.'
-                );
-            }
-
-            const dados =
-                await resposta.json();
-
-            const vendasFormatadas =
-                dados.map(venda => ({
-                    id: venda.id,
-                    mesa: Number(
-                        venda.mesa
-                    ),
-                    cliente:
-                        venda.cliente || '',
-                    subtotal: Number(
-                        venda.subtotal
-                    ),
-                    desconto: Number(
-                        venda.desconto
-                    ),
-                    acrescimo: Number(
-                        venda.acrescimo
-                    ),
-                    total: Number(
-                        venda.total
-                    ),
-                    pagamento:
-                        venda.pagamento,
-                    data: new Date(
-                        venda.criado_em
-                    ).toLocaleString(
-                        'pt-BR'
-                    ),
-
-                    itens: Array.isArray(
-                        venda.itens
-                    )
-                        ? venda.itens.map(
-                            item => ({
-                                id:
-                                    item.produto_id,
-                                nome:
-                                    item.nome_produto,
-                                preco: Number(
-                                    item.preco_unitario
-                                ),
-                                quantidade:
-                                    Number(
-                                        item.quantidade
-                                    ),
-                                observacao:
-                                    item.observacao ||
-                                    ''
-                            })
-                        )
-                        : []
-                }));
-
-            setVendas(
-                vendasFormatadas
-            );
-        } catch (erro) {
-            console.error(
-                'Erro ao buscar vendas:',
-                erro
-            );
-        }
-    }
-
-    async function buscarComandas() {
-        try {
-            const resposta = await fetch(
-                `${API_URL}/comandas`
-            );
-
-            if (!resposta.ok) {
-                throw new Error(
-                    'Não foi possível buscar as comandas.'
-                );
-            }
-
-            const dados =
-                await resposta.json();
-
-            const comandasFormatadas =
-                criarComandasVazias();
-
-            dados.forEach(comanda => {
-                const numeroMesa =
-                    Number(comanda.mesa);
-
-                comandasFormatadas[
-                    numeroMesa
-                ] = {
-                    mesa: numeroMesa,
-
-                    cliente:
-                        comanda.cliente ||
-                        '',
-
-                    itens:
-                        Array.isArray(
-                            comanda.itens
-                        )
-                            ? comanda.itens.map(
-                                item => ({
-                                    ...item,
-
-                                    id: Number(
-                                        item.id
-                                    ),
-
-                                    preco:
-                                        Number(
-                                            item.preco
-                                        ),
-
-                                    quantidade:
-                                        Number(
-                                            item.quantidade
-                                        ),
-
-                                    observacao:
-                                        item.observacao ||
-                                        ''
-                                })
-                            )
-                            : [],
-
-                    desconto: Number(
-                        comanda.desconto ||
-                        0
-                    ),
-
-                    acrescimo: Number(
-                        comanda.acrescimo ||
-                        0
-                    )
-                };
-            });
-
-            setComandas(
-                comandasFormatadas
-            );
-        } catch (erro) {
-            console.error(
-                'Erro ao buscar comandas:',
-                erro
-            );
-        }
-    }
-
-    function abrirComanda(
-        numeroMesa
-    ) {
+    function abrirComanda(numeroMesa) {
         setMesaSelecionada(
-            numeroMesa
+            Number(numeroMesa)
         );
 
         setPagina('comanda');
@@ -348,10 +198,7 @@ function SistemaAtual() {
     }
 
     function abrirProdutos() {
-        if (
-            cargo !==
-            'administrador'
-        ) {
+        if (cargo !== 'administrador') {
             window.alert(
                 'Somente administradores podem gerenciar produtos.'
             );
@@ -362,87 +209,172 @@ function SistemaAtual() {
         setPagina('produtos');
     }
 
-    async function atualizarComanda(
-        numeroMesa,
-        alteracoes
-    ) {
-        const comandaAtual =
-            comandas[numeroMesa] ||
-            criarComandasVazias()[
-                numeroMesa
-            ];
+    function abrirGerenciamentoMesas() {
+        if (cargo !== 'administrador') {
+            window.alert(
+                'Somente administradores podem gerenciar mesas.'
+            );
 
+            return;
+        }
+
+        setPagina('gerenciar-mesas');
+    }
+
+    function abrirFuncionarios() {
+        if (cargo !== 'administrador') {
+            window.alert(
+                'Somente administradores podem gerenciar funcionários.'
+            );
+
+            return;
+        }
+
+        setPagina('funcionarios');
+    }
+
+    function abrirCaixa() {
+        const podeVerCaixa =
+            cargo === 'caixa' ||
+            cargo === 'administrador';
+
+        if (!podeVerCaixa) {
+            window.alert(
+                'Somente caixas e administradores podem acessar o caixa.'
+            );
+
+            return;
+        }
+
+        setPagina('caixa');
+    }
+
+    function abrirRelatorios() {
+        const podeVerRelatorios =
+            cargo === 'caixa' ||
+            cargo === 'administrador';
+
+        if (!podeVerRelatorios) {
+            window.alert(
+                'Somente caixas e administradores podem acessar os relatórios.'
+            );
+
+            return;
+        }
+
+        setPagina('relatorios');
+    }
+
+    function abrirPainelExecutivo() {
+        const podeVerPainel =
+            cargo === 'caixa' ||
+            cargo === 'administrador';
+
+        if (!podeVerPainel) {
+            window.alert(
+                'Somente caixas e administradores podem acessar o Painel Executivo.'
+            );
+            return;
+        }
+
+        setPagina('executivo');
+    }
+
+    function mudarPaginaSistema(
+        novaPagina
+    ) {
+        if (
+            novaPagina === 'dashboard' ||
+            novaPagina === 'mesas' ||
+            novaPagina === 'comandas'
+        ) {
+            setPagina('dashboard');
+            return;
+        }
+
+        if (novaPagina === 'executivo') {
+            abrirPainelExecutivo();
+            return;
+        }
+
+        if (novaPagina === 'cardapio') {
+            abrirProdutos();
+            return;
+        }
+
+        if (novaPagina === 'historico') {
+            abrirHistorico();
+            return;
+        }
+
+        if (novaPagina === 'caixa') {
+            abrirCaixa();
+            return;
+        }
+
+        if (
+            novaPagina ===
+            'configuracoes'
+        ) {
+            setPagina('configuracoes');
+            return;
+        }
+
+        if (novaPagina === 'gerenciar-mesas') {
+            abrirGerenciamentoMesas();
+            return;
+        }
+
+        if (
+            novaPagina ===
+            'funcionarios'
+        ) {
+            abrirFuncionarios();
+            return;
+        }
+
+        if (
+            novaPagina ===
+            'relatorios'
+        ) {
+            abrirRelatorios();
+        }
+    }
+
+    function atualizarComanda(numeroMesa, alteracoes) {
+        const numero = Number(numeroMesa);
         const comandaAtualizada = {
-            ...comandaAtual,
+            ...obterComanda(numero),
             ...alteracoes,
-            mesa: numeroMesa
+            mesa: numero
         };
 
-        setComandas(
-            comandasAtuais => ({
-                ...comandasAtuais,
+        atualizarComandaLocal(numero, comandaAtualizada);
 
-                [numeroMesa]:
-                    comandaAtualizada
-            })
-        );
-
-        try {
-            const resposta = await fetch(
-                `${API_URL}/comandas/${numeroMesa}`,
-                {
-                    method: 'PUT',
-
-                    headers: {
-                        'Content-Type':
-                            'application/json'
-                    },
-
-                    body: JSON.stringify({
-                        cliente:
-                            comandaAtualizada
-                                .cliente ||
-                            '',
-
-                        itens:
-                            comandaAtualizada
-                                .itens ||
-                            [],
-
-                        desconto:
-                            Number(
-                                comandaAtualizada
-                                    .desconto ||
-                                0
-                            ),
-
-                        acrescimo:
-                            Number(
-                                comandaAtualizada
-                                    .acrescimo ||
-                                0
-                            )
-                    })
-                }
-            );
-
-            if (!resposta.ok) {
-                throw new Error(
-                    'Não foi possível salvar a comanda.'
-                );
-            }
-        } catch (erro) {
-            console.error(
-                'Erro ao salvar comanda:',
-                erro
-            );
-
-            window.alert(
-                'Não foi possível salvar a alteração da mesa.'
-            );
-
-            await buscarComandas();
+        const pendenteAnterior = salvamentosPendentes.current.get(numero);
+        if (pendenteAnterior?.timer) {
+            window.clearTimeout(pendenteAnterior.timer);
         }
+
+        const timer = window.setTimeout(async () => {
+            try {
+                await salvarComanda(numero, comandaAtualizada);
+            } catch (erro) {
+                console.error('Erro ao salvar comanda:', erro);
+                window.alert(erro.message || 'Não foi possível salvar a alteração da mesa.');
+                await atualizarComandas();
+            } finally {
+                const atual = salvamentosPendentes.current.get(numero);
+                if (atual?.timer === timer) {
+                    salvamentosPendentes.current.delete(numero);
+                }
+            }
+        }, 250);
+
+        salvamentosPendentes.current.set(numero, {
+            timer,
+            dados: comandaAtualizada
+        });
     }
 
     async function fecharConta(
@@ -462,100 +394,66 @@ function SistemaAtual() {
             return;
         }
 
+        const numero =
+            Number(numeroMesa);
+
+        const salvamentoPendente = salvamentosPendentes.current.get(numero);
+        if (salvamentoPendente?.timer) {
+            window.clearTimeout(salvamentoPendente.timer);
+            salvamentosPendentes.current.delete(numero);
+        }
+
+        const comanda =
+            obterComanda(numero);
+
+        if (
+            !Array.isArray(comanda.itens) ||
+            comanda.itens.length === 0
+        ) {
+            window.alert(
+                'A comanda não possui itens.'
+            );
+
+            return;
+        }
+
         try {
-            const comanda =
-                comandas[numeroMesa];
+            await registrarVenda({
+                mesa: numero,
+                cliente:
+                    comanda.cliente || '',
+                itens:
+                    comanda.itens || [],
+                subtotal: Number(
+                    resumo.subtotal || 0
+                ),
+                desconto: Number(
+                    resumo.desconto || 0
+                ),
+                acrescimo: Number(
+                    resumo.acrescimo || 0
+                ),
+                total: Number(
+                    resumo.total || 0
+                ),
+                pagamento
+            });
 
-            const respostaVenda =
-                await fetch(
-                    `${API_URL}/vendas`,
-                    {
-                        method: 'POST',
-
-                        headers: {
-                            'Content-Type':
-                                'application/json'
-                        },
-
-                        body:
-                            JSON.stringify({
-                                mesa:
-                                    numeroMesa,
-
-                                cliente:
-                                    comanda
-                                        .cliente ||
-                                    '',
-
-                                itens:
-                                    comanda
-                                        .itens ||
-                                    [],
-
-                                subtotal:
-                                    Number(
-                                        resumo
-                                            .subtotal
-                                    ),
-
-                                desconto:
-                                    Number(
-                                        resumo
-                                            .desconto
-                                    ),
-
-                                acrescimo:
-                                    Number(
-                                        resumo
-                                            .acrescimo
-                                    ),
-
-                                total:
-                                    Number(
-                                        resumo
-                                            .total
-                                    ),
-
-                                pagamento
-                            })
-                    }
-                );
-
-            if (
-                !respostaVenda.ok
-            ) {
-                throw new Error(
-                    'Não foi possível registrar a venda.'
-                );
-            }
-
-            const respostaLimpeza =
-                await fetch(
-                    `${API_URL}/comandas/${numeroMesa}`,
-                    {
-                        method:
-                            'DELETE'
-                    }
-                );
-
-            if (
-                !respostaLimpeza.ok
-            ) {
-                throw new Error(
-                    'A venda foi registrada, mas a mesa não foi liberada.'
-                );
-            }
-
-            await buscarComandas();
-            await buscarVendas();
-
-            setPagina(
-                'dashboard'
+            await excluirComanda(
+                numero
             );
 
-            setMesaSelecionada(
-                null
+            removerComandaLocal(
+                numero
             );
+
+            await Promise.all([
+                atualizarComandas(),
+                atualizarVendas()
+            ]);
+
+            setPagina('dashboard');
+            setMesaSelecionada(null);
         } catch (erro) {
             console.error(
                 'Erro ao fechar conta:',
@@ -563,139 +461,163 @@ function SistemaAtual() {
             );
 
             window.alert(
+                erro.message ||
                 'Não foi possível concluir o fechamento da conta.'
             );
         }
     }
 
     async function limparHistorico() {
-        if (
-            cargo !==
-            'administrador'
-        ) {
-            window.alert(
+        if (cargo !== 'administrador') {
+            throw new Error(
                 'Somente administradores podem apagar o histórico.'
             );
-
-            return;
         }
 
-        const confirmar =
-            window.confirm(
-                'Deseja apagar todo o histórico de vendas?'
-            );
+        await apagarHistorico();
+        await atualizarVendas();
 
-        if (!confirmar) {
-            return;
-        }
-
-        try {
-            const resposta =
-                await fetch(
-                    `${API_URL}/vendas`,
-                    {
-                        method:
-                            'DELETE'
-                    }
-                );
-
-            if (!resposta.ok) {
-                throw new Error(
-                    'Não foi possível apagar o histórico.'
-                );
-            }
-
-            await buscarVendas();
-        } catch (erro) {
-            console.error(
-                'Erro ao limpar histórico:',
-                erro
-            );
-
-            window.alert(
-                'Não foi possível apagar o histórico.'
-            );
-        }
+        return true;
     }
 
-    if (
-        pagina ===
-        'comanda'
-    ) {
+    function voltarAoDashboard() {
+        setPagina('dashboard');
+        setMesaSelecionada(null);
+    }
+
+    if (carregandoSistema) {
+        return <TelaCarregamento />;
+    }
+
+    if (erroSistema) {
         return (
+            <div
+                style={{
+                    minHeight: '100vh',
+                    display: 'grid',
+                    placeItems: 'center',
+                    padding: '24px',
+                    background: '#f8f4eb'
+                }}
+            >
+                <div
+                    style={{
+                        maxWidth: '560px',
+                        padding: '24px',
+                        border: '1px solid #efb4b4',
+                        borderRadius: '16px',
+                        background: '#fff0f0',
+                        color: '#a52a2a',
+                        fontWeight: '800',
+                        textAlign: 'center'
+                    }}
+                >
+                    {erroSistema}
+                </div>
+            </div>
+        );
+    }
+
+    function envolverComLayout(conteudo, paginaAtual, titulo) {
+        return (
+            <Layout
+                paginaAtual={paginaAtual}
+                mudarPagina={mudarPaginaSistema}
+                titulo={titulo}
+            >
+                {conteudo}
+            </Layout>
+        );
+    }
+
+    if (pagina === 'comanda') {
+        return envolverComLayout((
             <Comanda
-                numeroMesa={
+                numeroMesa={mesaSelecionada}
+                comanda={obterComanda(
                     mesaSelecionada
-                }
-                comanda={
-                    comandas[
-                        mesaSelecionada
-                    ] ||
-                    criarComandasVazias()[
-                        mesaSelecionada
-                    ]
-                }
+                )}
                 produtos={produtos}
                 atualizarComanda={
                     atualizarComanda
                 }
-                fecharConta={
-                    fecharConta
+                fecharConta={fecharConta}
+                voltarDashboard={
+                    voltarAoDashboard
                 }
-                voltarDashboard={() => {
-                    setPagina(
-                        'dashboard'
-                    );
-
-                    setMesaSelecionada(
-                        null
-                    );
-
-                    buscarComandas();
-                }}
             />
-        );
+        ), 'dashboard', `Comanda - Mesa ${mesaSelecionada}`);
     }
 
-    if (
-        pagina ===
-        'historico'
-    ) {
-        return (
+    if (pagina === 'historico') {
+        return envolverComLayout((
             <Historico
                 vendas={vendas}
-                limparHistorico={
-                    limparHistorico
-                }
-                voltarDashboard={() => {
-                    setPagina(
-                        'dashboard'
-                    );
+                limparHistorico={limparHistorico}
+                voltarDashboard={voltarAoDashboard}
+            />
+        ), 'historico', 'Histórico');
+    }
 
-                    buscarComandas();
+    if (pagina === 'produtos') {
+        return envolverComLayout((
+            <Produtos
+                produtos={produtos}
+                setProdutos={setProdutos}
+                voltarDashboard={async () => {
+                    await buscarProdutos();
+                    voltarAoDashboard();
                 }}
+            />
+        ), 'cardapio', 'Cardápio');
+    }
+
+    if (pagina === 'funcionarios') {
+        return envolverComLayout((
+            <Funcionarios voltarDashboard={voltarAoDashboard} />
+        ), 'funcionarios', 'Funcionários');
+    }
+
+    if (pagina === 'caixa') {
+        return envolverComLayout((
+            <Caixa voltarDashboard={voltarAoDashboard} />
+        ), 'caixa', 'Caixa');
+    }
+
+    if (pagina === 'executivo') {
+        return (
+            <PainelExecutivo
+                comandas={comandas}
+                mudarPaginaSistema={mudarPaginaSistema}
             />
         );
     }
 
-    if (
-        pagina ===
-        'produtos'
-    ) {
-        return (
-            <Produtos
-                produtos={produtos}
-                setProdutos={
-                    setProdutos
-                }
-                voltarDashboard={() => {
-                    buscarProdutos();
-                    buscarComandas();
+    if (pagina === 'relatorios') {
+    return (
+        <Relatorios
+            voltarDashboard={
+                voltarAoDashboard
+            }
+            mudarPaginaSistema={
+                mudarPaginaSistema
+            }
+        />
+    );
+}
 
-                    setPagina(
-                        'dashboard'
-                    );
-                }}
+    if (pagina === 'configuracoes') {
+        return (
+            <Aparencia mudarPagina={mudarPaginaSistema} />
+        );
+    }
+
+    if (pagina === 'gerenciar-mesas') {
+        return (
+            <GerenciarMesas
+                mudarPagina={
+                    mudarPaginaSistema
+                }
             />
         );
     }
@@ -704,14 +626,27 @@ function SistemaAtual() {
         <Dashboard
             comandas={comandas}
             vendas={vendas}
-            abrirComanda={
-                abrirComanda
-            }
+            abrirComanda={abrirComanda}
             abrirHistorico={
                 abrirHistorico
             }
             abrirProdutos={
                 abrirProdutos
+            }
+            abrirConfiguracoesMesas={
+                abrirGerenciamentoMesas
+            }
+            abrirFuncionarios={
+                abrirFuncionarios
+            }
+            abrirCaixa={
+                abrirCaixa
+            }
+            abrirRelatorios={
+                abrirRelatorios
+            }
+            mudarPaginaSistema={
+                mudarPaginaSistema
             }
         />
     );

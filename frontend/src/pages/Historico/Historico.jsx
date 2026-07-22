@@ -1,27 +1,108 @@
-function Historico({ vendas, limparHistorico, voltarDashboard }) {
+import { useState } from 'react';
+
+function Historico({
+    vendas = [],
+    limparHistorico,
+    voltarDashboard
+}) {
+    const [limpando, setLimpando] = useState(false);
+    const [mensagemErro, setMensagemErro] = useState('');
+
     const totalVendido = vendas.reduce((soma, venda) => {
-        return soma + Number(venda.total);
+        return soma + Number(venda.total || 0);
     }, 0);
 
     const produtosVendidos = {};
 
-    vendas.forEach(venda => {
-        venda.itens.forEach(item => {
-            if (!produtosVendidos[item.nome]) {
-                produtosVendidos[item.nome] = 0;
+    vendas.forEach((venda) => {
+        const itens = Array.isArray(venda.itens)
+            ? venda.itens
+            : [];
+
+        itens.forEach((item) => {
+            const nome = item.nome || 'Produto sem nome';
+            const quantidade = Number(item.quantidade || 0);
+
+            if (!produtosVendidos[nome]) {
+                produtosVendidos[nome] = 0;
             }
 
-            produtosVendidos[item.nome] += Number(item.quantidade);
+            produtosVendidos[nome] += quantidade;
         });
     });
 
     const produtoMaisVendido = Object.entries(produtosVendidos)
         .sort((a, b) => b[1] - a[1])[0];
 
+    async function handleLimparHistorico() {
+        setMensagemErro('');
+
+        if (vendas.length === 0) {
+            window.alert('O histórico já está vazio.');
+            return;
+        }
+
+        const confirmar = window.confirm(
+            'Tem certeza de que deseja excluir todo o histórico de vendas? Essa ação não poderá ser desfeita.'
+        );
+
+        if (!confirmar) {
+            return;
+        }
+
+        if (typeof limparHistorico !== 'function') {
+            setMensagemErro(
+                'A função responsável por excluir o histórico não foi encontrada.'
+            );
+
+            console.error(
+                'A propriedade limparHistorico não foi enviada para o componente Historico.'
+            );
+
+            return;
+        }
+
+        try {
+            setLimpando(true);
+
+            const resultado = await limparHistorico();
+
+            if (resultado === false) {
+                throw new Error(
+                    'Não foi possível excluir o histórico.'
+                );
+            }
+
+            window.alert(
+                'Histórico excluído com sucesso.'
+            );
+        } catch (erro) {
+            console.error(
+                'Erro ao limpar histórico:',
+                erro
+            );
+
+            setMensagemErro(
+                erro?.message ||
+                'Ocorreu um erro ao excluir o histórico.'
+            );
+        } finally {
+            setLimpando(false);
+        }
+    }
+
     return (
-        <div style={{ padding: '30px', background: '#F5F1E8', minHeight: '100vh' }}>
+        <div
+            style={{
+                padding: '30px',
+                background: '#F5F1E8',
+                minHeight: '100vh'
+            }}
+        >
             <button
+                type="button"
                 onClick={voltarDashboard}
+                disabled={limpando}
                 style={{
                     background: '#C89B3C',
                     color: '#2D1F39',
@@ -29,88 +110,215 @@ function Historico({ vendas, limparHistorico, voltarDashboard }) {
                     padding: '12px 18px',
                     borderRadius: '8px',
                     fontWeight: 'bold',
-                    cursor: 'pointer',
-                    marginBottom: '20px'
+                    cursor: limpando
+                        ? 'not-allowed'
+                        : 'pointer',
+                    marginBottom: '20px',
+                    opacity: limpando ? 0.6 : 1
                 }}
             >
                 ← Voltar
             </button>
 
-            <h1 style={{ color: '#4A315C', marginBottom: '10px' }}>
+            <h1
+                style={{
+                    color: '#4A315C',
+                    marginBottom: '10px'
+                }}
+            >
                 Histórico de Vendas
             </h1>
 
-            <h2 style={{ color: '#2D1F39', marginBottom: '10px' }}>
+            <h2
+                style={{
+                    color: '#2D1F39',
+                    marginBottom: '10px'
+                }}
+            >
                 Total vendido: R$ {totalVendido.toFixed(2)}
             </h2>
 
-            <h3 style={{ color: '#4A315C', marginBottom: '20px' }}>
-                Produto mais vendido: {produtoMaisVendido
+            <h3
+                style={{
+                    color: '#4A315C',
+                    marginBottom: '20px'
+                }}
+            >
+                Produto mais vendido:{' '}
+                {produtoMaisVendido
                     ? `${produtoMaisVendido[0]} (${produtoMaisVendido[1]} unidades)`
                     : 'Nenhum produto vendido ainda'}
             </h3>
 
             <button
-                onClick={limparHistorico}
+                type="button"
+                onClick={handleLimparHistorico}
+                disabled={
+                    limpando ||
+                    vendas.length === 0
+                }
                 style={{
-                    background: '#e74c3c',
+                    background:
+                        limpando || vendas.length === 0
+                            ? '#9ca3af'
+                            : '#e74c3c',
                     color: 'white',
                     border: 'none',
                     padding: '12px 18px',
                     borderRadius: '8px',
                     fontWeight: 'bold',
-                    cursor: 'pointer',
-                    marginBottom: '20px'
+                    cursor:
+                        limpando || vendas.length === 0
+                            ? 'not-allowed'
+                            : 'pointer',
+                    marginBottom: '20px',
+                    transition:
+                        'transform 0.15s ease, background 0.2s ease'
                 }}
             >
-                Limpar histórico
+                {limpando
+                    ? 'Excluindo histórico...'
+                    : 'Limpar histórico'}
             </button>
+
+            {mensagemErro && (
+                <div
+                    style={{
+                        maxWidth: '650px',
+                        marginBottom: '20px',
+                        padding: '12px 16px',
+                        background: '#fee2e2',
+                        color: '#b91c1c',
+                        border: '1px solid #fecaca',
+                        borderRadius: '8px',
+                        fontWeight: '600'
+                    }}
+                >
+                    {mensagemErro}
+                </div>
+            )}
 
             {vendas.length === 0 ? (
                 <p>Nenhuma venda fechada ainda.</p>
             ) : (
-                vendas.map(venda => (
-                    <div
-                        key={venda.id}
-                        style={{
-                            background: 'white',
-                            borderLeft: '5px solid #C89B3C',
-                            borderRadius: '12px',
-                            padding: '20px',
-                            marginBottom: '15px'
-                        }}
-                    >
-                        <h2 style={{ color: '#4A315C' }}>
-                            Mesa {venda.mesa}
-                            {venda.cliente ? ` - ${venda.cliente}` : ''}
-                        </h2>
+                vendas.map((venda) => {
+                    const itens = Array.isArray(venda.itens)
+                        ? venda.itens
+                        : [];
 
-                        <p><strong>Data:</strong> {venda.data}</p>
-                        <p><strong>Pagamento:</strong> {venda.pagamento}</p>
-                        <p><strong>Subtotal:</strong> R$ {Number(venda.subtotal).toFixed(2)}</p>
-                        <p><strong>Desconto:</strong> R$ {Number(venda.desconto).toFixed(2)}</p>
-                        <p><strong>Acréscimo:</strong> R$ {Number(venda.acrescimo).toFixed(2)}</p>
-                        <p><strong>Total:</strong> R$ {Number(venda.total).toFixed(2)}</p>
+                    return (
+                        <div
+                            key={venda.id}
+                            style={{
+                                background: 'white',
+                                borderLeft: '5px solid #C89B3C',
+                                borderRadius: '12px',
+                                padding: '20px',
+                                marginBottom: '15px'
+                            }}
+                        >
+                            <h2
+                                style={{
+                                    color: '#4A315C'
+                                }}
+                            >
+                                Mesa {venda.mesa}
+                                {venda.cliente
+                                    ? ` - ${venda.cliente}`
+                                    : ''}
+                            </h2>
 
-                        <br />
+                            <p>
+                                <strong>Data:</strong>{' '}
+                                {venda.data || 'Não informada'}
+                            </p>
 
-                        <strong>Itens:</strong>
+                            <p>
+                                <strong>Pagamento:</strong>{' '}
+                                {venda.pagamento || 'Não informado'}
+                            </p>
 
-                        {venda.itens.map((item, index) => (
-                            <div key={index} style={{ marginTop: '8px' }}>
+                            <p>
+                                <strong>Subtotal:</strong>{' '}
+                                R${' '}
+                                {Number(
+                                    venda.subtotal || 0
+                                ).toFixed(2)}
+                            </p>
+
+                            <p>
+                                <strong>Desconto:</strong>{' '}
+                                R${' '}
+                                {Number(
+                                    venda.desconto || 0
+                                ).toFixed(2)}
+                            </p>
+
+                            <p>
+                                <strong>Acréscimo:</strong>{' '}
+                                R${' '}
+                                {Number(
+                                    venda.acrescimo || 0
+                                ).toFixed(2)}
+                            </p>
+
+                            <p>
+                                <strong>Total:</strong>{' '}
+                                R${' '}
+                                {Number(
+                                    venda.total || 0
+                                ).toFixed(2)}
+                            </p>
+
+                            <br />
+
+                            <strong>Itens:</strong>
+
+                            {itens.length === 0 ? (
                                 <p>
-                                    {item.quantidade}x {item.nome} - R$ {(Number(item.preco) * Number(item.quantidade)).toFixed(2)}
+                                    Nenhum item registrado nesta venda.
                                 </p>
+                            ) : (
+                                itens.map((item, index) => (
+                                    <div
+                                        key={
+                                            item.id ||
+                                            `${venda.id}-${index}`
+                                        }
+                                        style={{
+                                            marginTop: '8px'
+                                        }}
+                                    >
+                                        <p>
+                                            {Number(
+                                                item.quantidade || 0
+                                            )}
+                                            x{' '}
+                                            {item.nome ||
+                                                'Produto sem nome'}{' '}
+                                            - R${' '}
+                                            {(
+                                                Number(
+                                                    item.preco || 0
+                                                ) *
+                                                Number(
+                                                    item.quantidade || 0
+                                                )
+                                            ).toFixed(2)}
+                                        </p>
 
-                                {item.observacao && (
-                                    <small>
-                                        Observação: {item.observacao}
-                                    </small>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                ))
+                                        {item.observacao && (
+                                            <small>
+                                                Observação:{' '}
+                                                {item.observacao}
+                                            </small>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    );
+                })
             )}
         </div>
     );

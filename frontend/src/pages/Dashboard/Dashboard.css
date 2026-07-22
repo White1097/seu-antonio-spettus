@@ -162,3 +162,60 @@
             #5c1262
         );
 }
+
+/* =====================================================
+   ESTADOS DAS MESAS DINÂMICAS
+===================================================== */
+
+.dashboard-carregando-mesas,
+.dashboard-erro-mesas,
+.dashboard-sem-mesas{
+    padding:16px 18px;
+    border-radius:14px;
+    font-size:14px;
+    font-weight:800;
+}
+
+.dashboard-carregando-mesas{
+    border:1px solid #eadfce;
+    background:#ffffff;
+    color:#3A083E;
+}
+
+.dashboard-erro-mesas{
+    border:1px solid #efb4b4;
+    background:#fff0f0;
+    color:#a52a2a;
+}
+
+.dashboard-sem-mesas{
+    grid-column:1 / -1;
+    border:1px dashed #d8cabb;
+    background:#fbf8f3;
+    color:#756a72;
+    text-align:center;
+}
+/* Final 3.0 — painel de mesas */
+.dashboard-filtros-mesas{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+}
+.dashboard-filtros-mesas button{
+    border:1px solid var(--cor-borda, #e4d8ca);
+    border-radius:999px;
+    padding:8px 13px;
+    background:var(--cor-superficie, #fff);
+    color:var(--cor-texto, #251f24);
+    font-weight:800;
+    cursor:pointer;
+}
+.dashboard-filtros-mesas button.ativo{
+    border-color:#3A083E;
+    background:#3A083E;
+    color:#fff;
+}
+@media(max-width:700px){
+    .dashboard-filtros-mesas{width:100%}
+    .dashboard-filtros-mesas button{flex:1}
+}

@@ -342,3 +342,98 @@
         background:transparent;
     }
 }
+
+/* =====================================================
+   EFEITO VISUAL DO BOTÃO DE MENU
+===================================================== */
+
+.topbar-menu{
+    transition:
+        transform .12s ease,
+        background .2s ease,
+        box-shadow .2s ease,
+        border-color .2s ease;
+}
+
+.topbar-menu:hover{
+    transform:translateY(-2px);
+    background:#531158;
+    border-color:#D4AF37;
+    box-shadow:0 12px 22px rgba(58,8,62,.24);
+}
+
+.topbar-menu:active{
+    transform:translateY(1px) scale(.93);
+    background:#2d0530;
+    box-shadow:
+        0 3px 8px rgba(58,8,62,.22),
+        inset 0 2px 5px rgba(0,0,0,.18);
+}
+
+.topbar-menu:focus-visible{
+    outline:none;
+    box-shadow:
+        0 0 0 4px rgba(212,175,55,.22),
+        0 8px 16px rgba(58,8,62,.16);
+}
+/* =====================================================
+   TOPBAR 2.0 — tema e interface limpa
+===================================================== */
+.topbar {
+    background: var(--cor-superficie);
+    border-bottom-color: var(--cor-borda);
+}
+
+.topbar-saudacao {
+    color: var(--cor-texto-secundario);
+}
+
+.topbar h1,
+.topbar-usuario strong {
+    color: var(--cor-primaria);
+}
+
+.topbar-direita {
+    margin-left: auto;
+}
+
+.topbar-tema {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--cor-borda);
+    border-radius: 13px;
+    background: var(--cor-superficie-secundaria);
+    color: var(--cor-primaria);
+}
+
+.topbar-tema:hover {
+    transform: translateY(-2px);
+    border-color: var(--cor-dourada);
+    box-shadow: var(--sombra-sm);
+}
+
+.topbar-usuario {
+    border-color: var(--cor-borda);
+    background: var(--cor-superficie);
+}
+
+.topbar-usuario span {
+    color: var(--cor-sucesso);
+}
+
+:root[data-theme='escuro'] .topbar {
+    background: linear-gradient(180deg, #211922 0%, #1b151d 100%);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .18);
+}
+
+:root[data-theme='escuro'] .topbar-avatar {
+    background: linear-gradient(135deg, #521257, #351038);
+}
+
+@media(max-width:560px) {
+    .topbar-usuario-info {
+        display: none;
+    }
+}

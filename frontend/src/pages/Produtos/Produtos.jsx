@@ -1,161 +1,441 @@
-import { useState } from 'react';
+import {
+    useEffect,
+    useMemo,
+    useState
+} from 'react';
+
+import ProdutosToolbar from '../../components/Produtos/ProdutosToolbar';
+import ProdutosGrid from '../../components/Produtos/ProdutosGrid';
+import ProdutoModal from '../../components/Produtos/ProdutoModal';
+
+import {
+    atualizarProduto,
+    criarProduto,
+    excluirProduto,
+    listarProdutos
+} from '../../services/produtos';
+
 import './Produtos.css';
 
-const API_URL = 'https://seu-antonio-spettus-backend.onrender.com';
+const FORMULARIO_INICIAL = {
+    id: null,
+    nome: '',
+    preco: '',
+    categoria: '',
+    descricao: '',
+    imagem: '',
+    ativo: true,
+    destaque: false,
+    ordem: ''
+};
 
-function Produtos({ produtos, setProdutos, voltarDashboard }) {
-    const [nome, setNome] = useState('');
-    const [preco, setPreco] = useState('');
-    const [categoria, setCategoria] = useState('');
-    const [editandoId, setEditandoId] = useState(null);
+function Produtos({
+    voltarDashboard
+}) {
+    const [produtos, setProdutos] = useState([]);
+    const [carregando, setCarregando] = useState(true);
+
+    const [busca, setBusca] = useState('');
+    const [categoria, setCategoria] = useState('todas');
+    const [mostrarInativos, setMostrarInativos] =
+        useState(false);
+
+    const [modalAberto, setModalAberto] = useState(false);
+    const [salvando, setSalvando] = useState(false);
+    const [erroModal, setErroModal] = useState('');
+
+    const [formulario, setFormulario] =
+        useState(FORMULARIO_INICIAL);
+
+    const editando = Boolean(formulario.id);
+
+    useEffect(() => {
+        carregarProdutos();
+    }, []);
 
     async function carregarProdutos() {
-        const resposta = await fetch(`${API_URL}/produtos`);
-        const dados = await resposta.json();
+        try {
+            setCarregando(true);
 
-        setProdutos(
-            dados.map(produto => ({
-                ...produto,
-                preco: Number(produto.preco)
-            }))
+            const dados = await listarProdutos({
+                incluirInativos: true
+            });
+
+            setProdutos(dados);
+        } catch (erro) {
+            console.error(
+                'Erro ao carregar produtos:',
+                erro
+            );
+
+            window.alert(
+                'Não foi possível carregar os produtos.'
+            );
+        } finally {
+            setCarregando(false);
+        }
+    }
+
+    const categorias = useMemo(() => {
+        return [
+            ...new Set(
+                produtos
+                    .map(produto =>
+                        String(
+                            produto.categoria || ''
+                        ).trim()
+                    )
+                    .filter(Boolean)
+            )
+        ].sort((categoriaA, categoriaB) =>
+            categoriaA.localeCompare(
+                categoriaB,
+                'pt-BR'
+            )
         );
-    }
+    }, [produtos]);
 
-    function limparFormulario() {
-        setNome('');
-        setPreco('');
-        setCategoria('');
-        setEditandoId(null);
-    }
+    const produtosFiltrados = useMemo(() => {
+        const normalizar = (valor) => String(valor || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
 
-    async function salvarProduto() {
-        if (!nome || !preco || !categoria) {
-            alert('Preencha nome, preço e categoria.');
-            return;
-        }
+        const termo = normalizar(busca);
 
-        const produto = {
-            nome,
-            preco: Number(preco),
-            categoria
-        };
+        return produtos.filter(produto => {
+            const nomeNormalizado = normalizar(produto.nome);
+            const palavrasDoNome = nomeNormalizado
+                .split(/\s+/)
+                .filter(Boolean);
 
-        if (editandoId) {
-            await fetch(`${API_URL}/produtos/${editandoId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(produto)
-            });
-        } else {
-            await fetch(`${API_URL}/produtos`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(produto)
-            });
-        }
+            // Pesquisa somente no NOME do produto.
+            // O termo precisa iniciar o nome ou iniciar alguma palavra.
+            // Não pesquisa categoria, descrição nem o meio das palavras.
+            const correspondeBusca =
+                !termo ||
+                nomeNormalizado.startsWith(termo) ||
+                palavrasDoNome.some(
+                    palavra => palavra.startsWith(termo)
+                );
 
-        limparFormulario();
-        carregarProdutos();
+            const correspondeCategoria =
+                categoria === 'todas' ||
+                produto.categoria === categoria;
+
+            const correspondeStatus =
+                mostrarInativos ||
+                produto.ativo;
+
+            return (
+                correspondeBusca &&
+                correspondeCategoria &&
+                correspondeStatus
+            );
+        });
+    }, [
+        produtos,
+        busca,
+        categoria,
+        mostrarInativos
+    ]);
+
+    function abrirNovoProduto() {
+        setFormulario({
+            ...FORMULARIO_INICIAL,
+            ordem: String(
+                produtos.length + 1
+            )
+        });
+
+        setErroModal('');
+        setModalAberto(true);
     }
 
     function editarProduto(produto) {
-        setEditandoId(produto.id);
-        setNome(produto.nome);
-        setPreco(produto.preco);
-        setCategoria(produto.categoria);
+        setFormulario({
+            id: produto.id,
+            nome: produto.nome || '',
+            preco: String(
+                produto.preco ?? ''
+            ),
+            categoria:
+                produto.categoria || '',
+            descricao:
+                produto.descricao || '',
+            imagem:
+                produto.imagem || '',
+            ativo:
+                produto.ativo !== false,
+            destaque:
+                Boolean(produto.destaque),
+            ordem: String(
+                produto.ordem ?? ''
+            )
+        });
+
+        setErroModal('');
+        setModalAberto(true);
     }
 
-    async function excluirProduto(id) {
-        const confirmar = confirm('Deseja excluir este produto?');
+    function fecharModal() {
+        if (salvando) {
+            return;
+        }
+
+        setModalAberto(false);
+        setErroModal('');
+        setFormulario(
+            FORMULARIO_INICIAL
+        );
+    }
+
+    async function salvarProduto(evento) {
+        evento.preventDefault();
+
+        const nome =
+            formulario.nome.trim();
+
+        const categoriaProduto =
+            formulario.categoria.trim();
+
+        const preco =
+            Number(formulario.preco);
+
+        const ordem =
+            Number(formulario.ordem);
+
+        if (!nome) {
+            setErroModal(
+                'Informe o nome do produto.'
+            );
+            return;
+        }
+
+        if (
+            !Number.isFinite(preco) ||
+            preco < 0
+        ) {
+            setErroModal(
+                'Informe um preço válido.'
+            );
+            return;
+        }
+
+        if (!categoriaProduto) {
+            setErroModal(
+                'Informe a categoria do produto.'
+            );
+            return;
+        }
+
+        if (
+            !Number.isInteger(ordem) ||
+            ordem <= 0
+        ) {
+            setErroModal(
+                'Informe uma ordem válida.'
+            );
+            return;
+        }
+
+        const dadosProduto = {
+            nome,
+            preco,
+            categoria:
+                categoriaProduto,
+            descricao:
+                formulario.descricao,
+            imagem:
+                formulario.imagem,
+            ativo:
+                formulario.ativo,
+            destaque:
+                formulario.destaque,
+            ordem
+        };
+
+        try {
+            setSalvando(true);
+            setErroModal('');
+
+            if (editando) {
+                await atualizarProduto(
+                    formulario.id,
+                    dadosProduto
+                );
+            } else {
+                await criarProduto(
+                    dadosProduto
+                );
+            }
+
+            await carregarProdutos();
+            fecharModal();
+        } catch (erro) {
+            console.error(
+                'Erro ao salvar produto:',
+                erro
+            );
+
+            setErroModal(
+                erro.message ||
+                'Não foi possível salvar o produto.'
+            );
+        } finally {
+            setSalvando(false);
+        }
+    }
+
+    async function removerProduto(produto) {
+        const confirmar =
+            window.confirm(
+                `Deseja excluir "${produto.nome}"?`
+            );
 
         if (!confirmar) {
             return;
         }
 
-        await fetch(`${API_URL}/produtos/${id}`, {
-            method: 'DELETE'
-        });
+        try {
+            await excluirProduto(
+                produto.id
+            );
 
-        carregarProdutos();
+            await carregarProdutos();
+        } catch (erro) {
+            console.error(
+                'Erro ao excluir produto:',
+                erro
+            );
+
+            window.alert(
+                erro.message ||
+                'Não foi possível excluir o produto.'
+            );
+        }
+    }
+
+    async function alternarDisponibilidade(
+        produto
+    ) {
+        try {
+            await atualizarProduto(
+                produto.id,
+                {
+                    ativo:
+                        !produto.ativo
+                }
+            );
+
+            await carregarProdutos();
+        } catch (erro) {
+            console.error(
+                'Erro ao alterar disponibilidade:',
+                erro
+            );
+
+            window.alert(
+                'Não foi possível alterar a disponibilidade.'
+            );
+        }
+    }
+
+    async function alternarDestaque(
+        produto
+    ) {
+        try {
+            await atualizarProduto(
+                produto.id,
+                {
+                    destaque:
+                        !produto.destaque
+                }
+            );
+
+            await carregarProdutos();
+        } catch (erro) {
+            console.error(
+                'Erro ao alterar destaque:',
+                erro
+            );
+
+            window.alert(
+                'Não foi possível alterar o destaque.'
+            );
+        }
     }
 
     return (
-        <div className="produtos-page">
-            <button
-                className="botao-voltar-produtos"
-                onClick={voltarDashboard}
-            >
-                ← Voltar
-            </button>
+        <main className="produtos-page produtos-page-nova">
+            <header className="produtos-cabecalho">
+                <div>
+                    <span>
+                        Cardápio
+                    </span>
 
-            <h1>Gerenciar Produtos</h1>
+                    <h1>
+                        Gerenciar produtos
+                    </h1>
 
-            <div className="form-produto">
-                <input
-                    type="text"
-                    placeholder="Nome do produto"
-                    value={nome}
-                    onChange={evento => setNome(evento.target.value)}
-                />
+                    <p>
+                        Cadastre, edite e organize os produtos
+                        disponíveis no sistema.
+                    </p>
+                </div>
 
-                <input
-                    type="number"
-                    step="0.01"
-                    placeholder="Preço"
-                    value={preco}
-                    onChange={evento => setPreco(evento.target.value)}
-                />
-
-                <input
-                    type="text"
-                    placeholder="Categoria"
-                    value={categoria}
-                    onChange={evento => setCategoria(evento.target.value)}
-                />
-
-                <button onClick={salvarProduto}>
-                    {editandoId ? 'Salvar edição' : 'Adicionar produto'}
+                <button
+                    type="button"
+                    className="botao-voltar-produtos"
+                    onClick={voltarDashboard}
+                >
+                    Voltar ao dashboard
                 </button>
+            </header>
 
-                {editandoId && (
-                    <button
-                        className="botao-cancelar-edicao"
-                        onClick={limparFormulario}
-                    >
-                        Cancelar
-                    </button>
-                )}
-            </div>
+            <ProdutosToolbar
+                busca={busca}
+                setBusca={setBusca}
+                categoria={categoria}
+                setCategoria={setCategoria}
+                categorias={categorias}
+                mostrarInativos={
+                    mostrarInativos
+                }
+                setMostrarInativos={
+                    setMostrarInativos
+                }
+                abrirNovoProduto={
+                    abrirNovoProduto
+                }
+            />
 
-            <div className="lista-produtos-admin">
-                {produtos.map(produto => (
-                    <div className="produto-admin" key={produto.id}>
-                        <div>
-                            <h2>{produto.nome}</h2>
-                            <p>{produto.categoria}</p>
-                            <strong>R$ {Number(produto.preco).toFixed(2)}</strong>
-                        </div>
+            <ProdutosGrid
+                produtos={produtosFiltrados}
+                carregando={carregando}
+                editarProduto={editarProduto}
+                excluirProduto={removerProduto}
+                alternarDisponibilidade={
+                    alternarDisponibilidade
+                }
+                alternarDestaque={
+                    alternarDestaque
+                }
+            />
 
-                        <div className="acoes-produto">
-                            <button onClick={() => editarProduto(produto)}>
-                                Editar
-                            </button>
-
-                            <button
-                                className="botao-excluir-produto"
-                                onClick={() => excluirProduto(produto.id)}
-                            >
-                                Excluir
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
+            <ProdutoModal
+                aberto={modalAberto}
+                editando={editando}
+                formulario={formulario}
+                setFormulario={setFormulario}
+                categorias={categorias}
+                salvando={salvando}
+                erro={erroModal}
+                fecharModal={fecharModal}
+                salvarProduto={salvarProduto}
+            />
+        </main>
     );
 }
 

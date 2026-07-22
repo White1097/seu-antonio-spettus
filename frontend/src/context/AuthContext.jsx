@@ -2,13 +2,29 @@ import {
     createContext,
     useContext,
     useEffect,
-    useMemo,
     useState
 } from 'react';
 
 import { supabase } from '../services/supabase';
 
 const AuthContext = createContext(null);
+
+function normalizarCargo(valor) {
+    const cargo = String(valor || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+    const cargos = {
+        garcom: 'garçom',
+        caixa: 'caixa',
+        administrador: 'administrador',
+        admin: 'administrador'
+    };
+
+    return cargos[cargo] || null;
+}
 
 export function AuthProvider({ children }) {
     const [session, setSession] = useState(null);
@@ -236,29 +252,19 @@ export function AuthProvider({ children }) {
         perfil.ativo
     );
 
-    const cargo = perfil?.cargo ?? null;
+    const cargo = normalizarCargo(perfil?.cargo);
 
-    const value = useMemo(
-        () => ({
-            session,
-            user,
-            perfil,
-            cargo,
-            loading,
-            autenticado,
-            login,
-            logout,
-            atualizarPerfil
-        }),
-        [
-            session,
-            user,
-            perfil,
-            cargo,
-            loading,
-            autenticado
-        ]
-    );
+    const value = {
+        session,
+        user,
+        perfil,
+        cargo,
+        loading,
+        autenticado,
+        login,
+        logout,
+        atualizarPerfil
+    };
 
     return (
         <AuthContext.Provider value={value}>

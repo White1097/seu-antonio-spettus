@@ -236,3 +236,16 @@
 .mesa-card-rodape{
     color:#8d8189;
 }
+/* Final 3.0 — informações operacionais */
+.mesa-card-garcom{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-height:22px;
+    color:#756a72;
+    font-size:13px;
+}
+.mesa-card.ocupada .mesa-card-rodape{
+    color:#9a640c;
+    font-weight:800;
+}

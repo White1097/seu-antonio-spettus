@@ -23,6 +23,7 @@ function DashboardCards({
     faturamentoHoje = 0,
     contasFechadas = 0,
     totalFuncionarios = 0,
+    metaDiaria = 0,
     mostrarFinanceiro = true,
     mostrarFuncionarios = false
 }) {
@@ -46,7 +47,9 @@ function DashboardCards({
             valor: formatarDinheiro(
                 faturamentoHoje
             ),
-            descricao: 'Total vendido hoje',
+            descricao: Number(metaDiaria) > 0
+                ? `${Math.min(100, (Number(faturamentoHoje) / Number(metaDiaria)) * 100).toFixed(0)}% da meta de ${formatarDinheiro(metaDiaria)}`
+                : 'Total vendido hoje',
             icone: Banknote,
             classe: 'dourado',
             visivel: mostrarFinanceiro

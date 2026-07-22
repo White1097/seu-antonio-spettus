@@ -1,0 +1,190 @@
+.flex {
+    display: flex;
+}
+
+.flex-coluna {
+    display: flex;
+    flex-direction: column;
+}
+
+.grid {
+    display: grid;
+}
+
+.centralizar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.alinhar-centro {
+    align-items: center;
+}
+
+.justificar-centro {
+    justify-content: center;
+}
+
+.justificar-entre {
+    justify-content: space-between;
+}
+
+.quebrar-linha {
+    flex-wrap: wrap;
+}
+
+.gap-1 {
+    gap: var(--espacamento-1);
+}
+
+.gap-2 {
+    gap: var(--espacamento-2);
+}
+
+.gap-3 {
+    gap: var(--espacamento-3);
+}
+
+.gap-4 {
+    gap: var(--espacamento-4);
+}
+
+.gap-5 {
+    gap: var(--espacamento-5);
+}
+
+.gap-6 {
+    gap: var(--espacamento-6);
+}
+
+.mt-1 {
+    margin-top: var(--espacamento-1);
+}
+
+.mt-2 {
+    margin-top: var(--espacamento-2);
+}
+
+.mt-3 {
+    margin-top: var(--espacamento-3);
+}
+
+.mt-4 {
+    margin-top: var(--espacamento-4);
+}
+
+.mt-6 {
+    margin-top: var(--espacamento-6);
+}
+
+.mb-1 {
+    margin-bottom: var(--espacamento-1);
+}
+
+.mb-2 {
+    margin-bottom: var(--espacamento-2);
+}
+
+.mb-3 {
+    margin-bottom: var(--espacamento-3);
+}
+
+.mb-4 {
+    margin-bottom: var(--espacamento-4);
+}
+
+.mb-6 {
+    margin-bottom: var(--espacamento-6);
+}
+
+.p-2 {
+    padding: var(--espacamento-2);
+}
+
+.p-3 {
+    padding: var(--espacamento-3);
+}
+
+.p-4 {
+    padding: var(--espacamento-4);
+}
+
+.p-6 {
+    padding: var(--espacamento-6);
+}
+
+.largura-total {
+    width: 100%;
+}
+
+.altura-total {
+    height: 100%;
+}
+
+.texto-centro {
+    text-align: center;
+}
+
+.texto-direita {
+    text-align: right;
+}
+
+.texto-secundario {
+    color: var(--cor-texto-secundario);
+}
+
+.texto-sucesso {
+    color: var(--cor-sucesso);
+}
+
+.texto-perigo {
+    color: var(--cor-perigo);
+}
+
+.texto-alerta {
+    color: var(--cor-alerta);
+}
+
+.fonte-media {
+    font-weight: 500;
+}
+
+.fonte-semibold {
+    font-weight: 600;
+}
+
+.fonte-negrito {
+    font-weight: 700;
+}
+
+.arredondado {
+    border-radius: var(--raio-md);
+}
+
+.arredondado-lg {
+    border-radius: var(--raio-lg);
+}
+
+.sombra {
+    box-shadow: var(--sombra-sm);
+}
+
+.sombra-media {
+    box-shadow: var(--sombra-md);
+}
+
+.oculto {
+    display: none !important;
+}
+
+.somente-leitor-tela {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    white-space: nowrap;
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+}

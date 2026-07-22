@@ -1,16 +1,16 @@
 import {
-    Bell,
-    ChevronDown,
     Menu,
-    Search
+    Moon,
+    Sun
 } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import './Topbar.css';
 
 function formatarCargo(cargo) {
     const cargos = {
-        garcom: 'Garçom',
+        garçom: 'Garçom',
         caixa: 'Caixa',
         administrador: 'Administrador'
     };
@@ -22,11 +22,8 @@ function Topbar({
     abrirMenu,
     titulo = 'Dashboard'
 }) {
-    const {
-        perfil,
-        cargo
-    } = useAuth();
-
+    const { perfil, cargo } = useAuth();
+    const { temaEscuro, alternarTema, logoUrl, nomeSistema } = useTheme();
     const hora = new Date().getHours();
 
     let saudacao = 'Boa noite';
@@ -53,42 +50,32 @@ function Topbar({
                     <span className="topbar-saudacao">
                         {saudacao},
                     </span>
-
                     <h1>{titulo}</h1>
                 </div>
             </div>
 
             <div className="topbar-direita">
-                <label className="topbar-pesquisa">
-                    <Search size={18} />
-
-                    <input
-                        type="search"
-                        placeholder="Pesquisar..."
-                        aria-label="Pesquisar"
-                    />
-                </label>
-
                 <button
-                    className="topbar-notificacao"
+                    className="topbar-tema"
                     type="button"
-                    aria-label="Notificações"
+                    onClick={alternarTema}
+                    aria-label={temaEscuro
+                        ? 'Ativar tema claro'
+                        : 'Ativar tema escuro'}
+                    title={temaEscuro
+                        ? 'Ativar tema claro'
+                        : 'Ativar tema escuro'}
                 >
-                    <Bell size={20} />
-
-                    <span className="topbar-notificacao-badge">
-                        3
-                    </span>
+                    {temaEscuro
+                        ? <Sun size={20} />
+                        : <Moon size={20} />}
                 </button>
 
-                <button
-                    className="topbar-usuario"
-                    type="button"
-                >
+                <div className="topbar-usuario">
                     <div className="topbar-avatar">
                         <img
-                            src="/logo-seu-antonio.png"
-                            alt=""
+                            src={logoUrl}
+                            alt={nomeSistema}
                         />
                     </div>
 
@@ -96,17 +83,9 @@ function Topbar({
                         <strong>
                             {perfil?.nome || 'Funcionário'}
                         </strong>
-
-                        <span>
-                            {formatarCargo(cargo)}
-                        </span>
+                        <span>{formatarCargo(cargo)}</span>
                     </div>
-
-                    <ChevronDown
-                        className="topbar-usuario-seta"
-                        size={18}
-                    />
-                </button>
+                </div>
             </div>
         </header>
     );

@@ -1,10 +1,13 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import Layout from '../../components/Layout/Layout';
 import DashboardCards from '../../components/DashboardCards/DashboardCards';
 import MesaCard from '../../components/MesaCard/MesaCard';
 
 import { useAuth } from '../../context/AuthContext';
+import { useMesas } from '../../hooks/useMesas';
+import { useMetaDiaria } from '../../hooks/useMetaDiaria';
+import { useTheme } from '../../context/ThemeContext';
 
 import './Dashboard.css';
 
@@ -13,88 +16,194 @@ function Dashboard({
     vendas = [],
     abrirComanda,
     abrirHistorico,
-    abrirProdutos
+    abrirProdutos,
+    abrirConfiguracoesMesas,
+    abrirFuncionarios,
+    abrirCaixa,
+    abrirRelatorios,
+    mudarPaginaSistema
 }) {
-
     const { cargo } = useAuth();
+    const { metaDiaria } = useMetaDiaria();
+    const { nomeSistema } = useTheme();
+    const [filtroMesas, setFiltroMesas] = useState('todas');
 
-    const mesas = [
-        1,2,3,4,
-        5,6,7,8
-    ];
+    const {
+        mesas,
+        carregando: carregandoMesas,
+        erro: erroMesas
+    } = useMesas();
 
-    function itensDaMesa(numeroMesa){
+    const mesasAtivas = useMemo(() => {
+        return mesas
+            .filter(mesa => mesa.ativa)
+            .sort(
+                (mesaA, mesaB) =>
+                    Number(mesaA.ordem) -
+                    Number(mesaB.ordem)
+            );
+    }, [mesas]);
 
-        const itens = comandas[numeroMesa]?.itens;
+    const numerosMesas = useMemo(() => {
+        return mesasAtivas.map(
+            mesa => Number(mesa.numero)
+        );
+    }, [mesasAtivas]);
+
+    function itensDaMesa(numeroMesa) {
+        const itens =
+            comandas[numeroMesa]?.itens;
 
         return Array.isArray(itens)
             ? itens
             : [];
-
     }
 
-    function totalDaMesa(numeroMesa){
-
+    function totalDaMesa(numeroMesa) {
         return itensDaMesa(numeroMesa).reduce(
-            (total,item)=>{
-
+            (total, item) => {
                 return (
                     total +
                     Number(item.preco || 0) *
                     Number(item.quantidade || 0)
                 );
-
             },
             0
         );
-
     }
 
-    function quantidadeDaMesa(numeroMesa){
-
+    function quantidadeDaMesa(numeroMesa) {
         return itensDaMesa(numeroMesa).reduce(
-            (total,item)=>{
-
+            (total, item) => {
                 return (
                     total +
                     Number(item.quantidade || 0)
                 );
-
             },
             0
         );
-
     }
 
-    function mesaOcupada(numeroMesa){
-
+    function mesaEstaOcupada(numeroMesa) {
         return itensDaMesa(numeroMesa).length > 0;
-
     }
 
-    const mesasOcupadas = useMemo(()=>{
+    const resumoMesas = useMemo(() => {
+        return numerosMesas.reduce(
+            (resumo, numeroMesa) => {
+                const itens = Array.isArray(
+                    comandas[numeroMesa]?.itens
+                )
+                    ? comandas[numeroMesa].itens
+                    : [];
 
-        return mesas.filter(
-            mesaOcupada
-        ).length;
+                const totalMesa = itens.reduce(
+                    (total, item) =>
+                        total +
+                        Number(item.preco || 0) *
+                            Number(item.quantidade || 0),
+                    0
+                );
 
-    },[comandas]);
+                return {
+                    ocupadas:
+                        resumo.ocupadas +
+                        (itens.length > 0 ? 1 : 0),
+                    totalEmAberto:
+                        resumo.totalEmAberto + totalMesa
+                };
+            },
+            {
+                ocupadas: 0,
+                totalEmAberto: 0
+            }
+        );
+    }, [comandas, numerosMesas]);
 
-    const faturamentoHoje = useMemo(()=>{
+    const mesasOcupadas = resumoMesas.ocupadas;
+    const totalEmAberto = resumoMesas.totalEmAberto;
 
-        return vendas.reduce(
-            (total,venda)=>{
+    const mesasFiltradas = useMemo(() => {
+        const ocupada = (numero) => {
+            const itens = comandas[Number(numero)]?.itens;
+            return Array.isArray(itens) && itens.length > 0;
+        };
 
+        if (filtroMesas === 'ocupadas') {
+            return mesasAtivas.filter(mesa => ocupada(mesa.numero));
+        }
+        if (filtroMesas === 'livres') {
+            return mesasAtivas.filter(mesa => !ocupada(mesa.numero));
+        }
+        return mesasAtivas;
+    }, [filtroMesas, mesasAtivas, comandas]);
+
+    const vendasDeHoje = useMemo(() => {
+        const hoje = new Date();
+
+        return vendas.filter(venda => {
+            if (
+                !venda.criado_em &&
+                !venda.data
+            ) {
+                return true;
+            }
+
+            let dataVenda;
+
+            if (venda.criado_em) {
+                dataVenda = new Date(
+                    venda.criado_em
+                );
+            } else {
+                const textoData =
+                    String(venda.data)
+                        .split(',')[0]
+                        .trim();
+
+                const partes =
+                    textoData.split('/');
+
+                if (partes.length === 3) {
+                    dataVenda = new Date(
+                        Number(partes[2]),
+                        Number(partes[1]) - 1,
+                        Number(partes[0])
+                    );
+                }
+            }
+
+            if (
+                !dataVenda ||
+                Number.isNaN(
+                    dataVenda.getTime()
+                )
+            ) {
+                return true;
+            }
+
+            return (
+                dataVenda.getDate() ===
+                    hoje.getDate() &&
+                dataVenda.getMonth() ===
+                    hoje.getMonth() &&
+                dataVenda.getFullYear() ===
+                    hoje.getFullYear()
+            );
+        });
+    }, [vendas]);
+
+    const faturamentoHoje = useMemo(() => {
+        return vendasDeHoje.reduce(
+            (total, venda) => {
                 return (
                     total +
                     Number(venda.total || 0)
                 );
-
             },
             0
         );
-
-    },[vendas]);
+    }, [vendasDeHoje]);
 
     const mostrarFinanceiro =
         cargo === 'caixa' ||
@@ -103,38 +212,69 @@ function Dashboard({
     const mostrarFuncionarios =
         cargo === 'administrador';
 
-    function mudarPagina(pagina){
-
-        if(
-            pagina === 'dashboard' ||
-            pagina === 'mesas' ||
-            pagina === 'comandas'
-        ){
+    function mudarPagina(pagina) {
+        if (typeof mudarPaginaSistema === 'function') {
+            mudarPaginaSistema(pagina);
             return;
         }
 
-        if(pagina === 'cardapio'){
+        if (
+            pagina === 'dashboard' ||
+            pagina === 'mesas' ||
+            pagina === 'comandas'
+        ) {
+            return;
+        }
+
+        if (pagina === 'cardapio') {
             abrirProdutos();
             return;
         }
 
-        if(pagina === 'historico'){
+        if (pagina === 'historico') {
             abrirHistorico();
             return;
         }
 
-        window.alert(
-            'Essa tela será criada nas próximas etapas.'
-        );
+        if (pagina === 'caixa') {
+            abrirCaixa();
+            return;
+        }
 
+        if (pagina === 'funcionarios') {
+            abrirFuncionarios();
+            return;
+        }
+
+        if (pagina === 'configuracoes') {
+            abrirConfiguracoesMesas();
+            return;
+        }
+
+        if (pagina === 'relatorios') {
+            abrirRelatorios();
+        }
     }
-        return (
+
+    return (
         <Layout
             paginaAtual="dashboard"
             mudarPagina={mudarPagina}
             titulo="Dashboard"
         >
             <section className="dashboard-novo">
+                {carregandoMesas && (
+                    <div className="dashboard-carregando-mesas">
+                        Carregando mesas...
+                    </div>
+                )}
+
+                {erroMesas && (
+                    <div className="dashboard-erro-mesas">
+                        {erroMesas}
+                    </div>
+                )}
+
                 <header className="dashboard-apresentacao">
                     <div>
                         <span className="dashboard-etiqueta">
@@ -146,25 +286,31 @@ function Dashboard({
                         </h2>
 
                         <p>
-                            Acompanhe as mesas, comandas e vendas
-                            do Seu Antônio Spettus.
+                            Acompanhe as mesas, comandas e
+                            vendas do {nomeSistema}.
                         </p>
                     </div>
 
                     <div className="dashboard-status">
                         <span className="dashboard-status-ponto" />
+
                         Sistema online
                     </div>
                 </header>
 
                 <DashboardCards
-                    totalMesas={8}
+                    totalMesas={mesasAtivas.length}
                     mesasOcupadas={mesasOcupadas}
                     faturamentoHoje={faturamentoHoje}
-                    contasFechadas={vendas.length}
+                    contasFechadas={vendasDeHoje.length}
                     totalFuncionarios={1}
-                    mostrarFinanceiro={mostrarFinanceiro}
-                    mostrarFuncionarios={mostrarFuncionarios}
+                    metaDiaria={metaDiaria}
+                    mostrarFinanceiro={
+                        mostrarFinanceiro
+                    }
+                    mostrarFuncionarios={
+                        mostrarFuncionarios
+                    }
                 />
 
                 <section className="dashboard-area-principal">
@@ -180,53 +326,88 @@ function Dashboard({
                                 </h3>
                             </div>
 
-                            <div className="dashboard-legenda">
-                                <span>
-                                    <i className="legenda-livre" />
-                                    Livre
-                                </span>
-
-                                <span>
-                                    <i className="legenda-ocupada" />
-                                    Ocupada
-                                </span>
+                            <div className="dashboard-filtros-mesas" role="group" aria-label="Filtrar mesas">
+                                <button type="button" className={filtroMesas === 'todas' ? 'ativo' : ''} onClick={() => setFiltroMesas('todas')}>Todas</button>
+                                <button type="button" className={filtroMesas === 'livres' ? 'ativo' : ''} onClick={() => setFiltroMesas('livres')}>Livres</button>
+                                <button type="button" className={filtroMesas === 'ocupadas' ? 'ativo' : ''} onClick={() => setFiltroMesas('ocupadas')}>Ocupadas</button>
                             </div>
                         </div>
 
-                        <div className="dashboard-mesas-grid">
-                            {mesas.map(numeroMesa => {
-                                const comanda =
-                                    comandas[numeroMesa] || {};
+                        {!carregandoMesas &&
+                        mesasAtivas.length === 0 ? (
+                            <div className="dashboard-sem-mesas">
+                                Nenhuma mesa ativa cadastrada.
+                            </div>
+                        ) : (
+                            <div className="dashboard-mesas-grid">
+                                {mesasFiltradas.map(mesa => {
+                                    const numeroMesa =
+                                        Number(mesa.numero);
 
-                                const ocupada =
-                                    mesaOcupada(numeroMesa);
+                                    const comanda =
+                                        comandas[
+                                            numeroMesa
+                                        ] || {};
 
-                                return (
-                                    <MesaCard
-                                        key={numeroMesa}
-                                        numero={numeroMesa}
-                                        cliente={
-                                            comanda.cliente || ''
-                                        }
-                                        total={
-                                            totalDaMesa(numeroMesa)
-                                        }
-                                        quantidadeItens={
-                                            quantidadeDaMesa(numeroMesa)
-                                        }
-                                        ocupada={ocupada}
-                                        atualizadoEm={
-                                            comanda.atualizado_em ||
-                                            comanda.atualizadoEm ||
-                                            null
-                                        }
-                                        onClick={() =>
-                                            abrirComanda(numeroMesa)
-                                        }
-                                    />
-                                );
-                            })}
-                        </div>
+                                    const ocupada =
+                                        mesaEstaOcupada(
+                                            numeroMesa
+                                        );
+
+                                    return (
+                                        <MesaCard
+                                            key={mesa.id}
+                                            numero={
+                                                numeroMesa
+                                            }
+                                            nome={
+                                                mesa.nome
+                                            }
+                                            cliente={
+                                                comanda.cliente ||
+                                                ''
+                                            }
+                                            total={
+                                                totalDaMesa(
+                                                    numeroMesa
+                                                )
+                                            }
+                                            quantidadeItens={
+                                                quantidadeDaMesa(
+                                                    numeroMesa
+                                                )
+                                            }
+                                            ocupada={
+                                                ocupada
+                                            }
+                                            garcom={
+                                                comanda.funcionario_nome ||
+                                                comanda.garcom ||
+                                                comanda.atendente ||
+                                                ''
+                                            }
+                                            abertoEm={
+                                                comanda.criado_em ||
+                                                comanda.created_at ||
+                                                comanda.aberto_em ||
+                                                null
+                                            }
+                                            atualizadoEm={
+                                                comanda.atualizado_em ||
+                                                comanda.atualizadoEm ||
+                                                mesa.atualizado_em ||
+                                                null
+                                            }
+                                            onClick={() =>
+                                                abrirComanda(
+                                                    numeroMesa
+                                                )
+                                            }
+                                        />
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
 
                     <aside className="dashboard-painel-lateral">
@@ -242,11 +423,25 @@ function Dashboard({
 
                         <div className="dashboard-indicador">
                             <span>
+                                Total de mesas
+                            </span>
+
+                            <strong>
+                                {mesasAtivas.length}
+                            </strong>
+                        </div>
+
+                        <div className="dashboard-indicador">
+                            <span>
                                 Mesas livres
                             </span>
 
                             <strong>
-                                {8 - mesasOcupadas}
+                                {Math.max(
+                                    mesasAtivas.length -
+                                        mesasOcupadas,
+                                    0
+                                )}
                             </strong>
                         </div>
 
@@ -266,17 +461,13 @@ function Dashboard({
                             </span>
 
                             <strong>
-                                {mesas
-                                    .reduce(
-                                        (total, numeroMesa) =>
-                                            total +
-                                            totalDaMesa(numeroMesa),
-                                        0
-                                    )
-                                    .toLocaleString('pt-BR', {
+                                {totalEmAberto.toLocaleString(
+                                    'pt-BR',
+                                    {
                                         style: 'currency',
                                         currency: 'BRL'
-                                    })}
+                                    }
+                                )}
                             </strong>
                         </div>
 
@@ -328,7 +519,8 @@ function Dashboard({
                                         >
                                             <div>
                                                 <strong>
-                                                    Mesa {venda.mesa}
+                                                    Mesa{' '}
+                                                    {venda.mesa}
                                                 </strong>
 
                                                 <span>
@@ -344,12 +536,15 @@ function Dashboard({
 
                                                 <strong>
                                                     {Number(
-                                                        venda.total || 0
+                                                        venda.total ||
+                                                            0
                                                     ).toLocaleString(
                                                         'pt-BR',
                                                         {
-                                                            style: 'currency',
-                                                            currency: 'BRL'
+                                                            style:
+                                                                'currency',
+                                                            currency:
+                                                                'BRL'
                                                         }
                                                     )}
                                                 </strong>

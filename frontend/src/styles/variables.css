@@ -1,0 +1,146 @@
+:root {
+    /* Identidade visual */
+    --cor-primaria: #3a083e;
+    --cor-primaria-hover: #531158;
+    --cor-primaria-escura: #2d0530;
+    --cor-primaria-clara: #f5edf6;
+
+    --cor-dourada: #d4af37;
+    --cor-dourada-hover: #bd982b;
+    --cor-dourada-clara: #fff8dc;
+
+    /* Estados */
+    --cor-sucesso: #15803d;
+    --cor-sucesso-hover: #166534;
+    --cor-sucesso-clara: #dcfce7;
+
+    --cor-perigo: #dc2626;
+    --cor-perigo-hover: #b91c1c;
+    --cor-perigo-clara: #fee2e2;
+
+    --cor-alerta: #d97706;
+    --cor-alerta-hover: #b45309;
+    --cor-alerta-clara: #fef3c7;
+
+    --cor-info: #2563eb;
+    --cor-info-hover: #1d4ed8;
+    --cor-info-clara: #dbeafe;
+
+    /* Superfícies */
+    --cor-fundo: #f7f7f9;
+    --cor-superficie: #ffffff;
+    --cor-superficie-secundaria: #f3f4f6;
+    --cor-superficie-hover: #fafafa;
+
+    /* Textos */
+    --cor-texto: #1f2937;
+    --cor-texto-secundario: #6b7280;
+    --cor-texto-claro: #9ca3af;
+    --cor-texto-branco: #ffffff;
+
+    /* Bordas */
+    --cor-borda: #e5e7eb;
+    --cor-borda-forte: #d1d5db;
+    --cor-borda-foco: var(--cor-dourada);
+
+    /* Tipografia */
+    --fonte-principal:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    --tamanho-texto-xs: 0.75rem;
+    --tamanho-texto-sm: 0.875rem;
+    --tamanho-texto-md: 1rem;
+    --tamanho-texto-lg: 1.125rem;
+    --tamanho-texto-xl: 1.375rem;
+    --tamanho-texto-2xl: 1.75rem;
+
+    /* Espaçamentos */
+    --espacamento-1: 0.25rem;
+    --espacamento-2: 0.5rem;
+    --espacamento-3: 0.75rem;
+    --espacamento-4: 1rem;
+    --espacamento-5: 1.25rem;
+    --espacamento-6: 1.5rem;
+    --espacamento-8: 2rem;
+    --espacamento-10: 2.5rem;
+
+    /* Bordas arredondadas */
+    --raio-sm: 6px;
+    --raio-md: 10px;
+    --raio-lg: 14px;
+    --raio-xl: 18px;
+    --raio-circular: 999px;
+
+    /* Sombras */
+    --sombra-xs: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --sombra-sm: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --sombra-md: 0 10px 25px rgba(15, 23, 42, 0.1);
+    --sombra-lg: 0 18px 40px rgba(15, 23, 42, 0.14);
+
+    --sombra-roxa: 0 10px 22px rgba(58, 8, 62, 0.2);
+    --sombra-dourada: 0 0 0 4px rgba(212, 175, 55, 0.2);
+
+    /* Transições */
+    --transicao-rapida: 120ms ease;
+    --transicao-padrao: 200ms ease;
+    --transicao-lenta: 320ms ease;
+
+    /* Tamanhos */
+    --altura-campo: 44px;
+    --altura-botao: 42px;
+
+    /* Camadas */
+    --z-sidebar: 100;
+    --z-topbar: 200;
+    --z-overlay: 900;
+    --z-modal: 1000;
+    --z-toast: 1100;
+}
+
+
+/* Tema escuro — versão 2.0 */
+:root[data-theme='escuro'] {
+    --cor-primaria: #d9a9dc;
+    --cor-primaria-hover: #e8c5ea;
+    --cor-primaria-escura: #26042a;
+    --cor-primaria-clara: #321235;
+
+    --cor-dourada: #e2bd48;
+    --cor-dourada-hover: #f0cc5b;
+    --cor-dourada-clara: #342c13;
+
+    --cor-sucesso: #4ade80;
+    --cor-sucesso-hover: #86efac;
+    --cor-sucesso-clara: #12351f;
+    --cor-perigo: #f87171;
+    --cor-perigo-hover: #fca5a5;
+    --cor-perigo-clara: #3b1717;
+    --cor-alerta: #fbbf24;
+    --cor-alerta-hover: #fcd34d;
+    --cor-alerta-clara: #3b2b0d;
+    --cor-info: #60a5fa;
+    --cor-info-hover: #93c5fd;
+    --cor-info-clara: #142a45;
+
+    --cor-fundo: #120d13;
+    --cor-superficie: #1d171f;
+    --cor-superficie-secundaria: #28212a;
+    --cor-superficie-hover: #302733;
+
+    --cor-texto: #f4eef5;
+    --cor-texto-secundario: #c7bac9;
+    --cor-texto-claro: #988a9b;
+    --cor-texto-branco: #ffffff;
+
+    --cor-borda: #3b303e;
+    --cor-borda-forte: #564459;
+    --sombra-xs: 0 1px 3px rgba(0, 0, 0, 0.28);
+    --sombra-sm: 0 4px 14px rgba(0, 0, 0, 0.3);
+    --sombra-md: 0 12px 28px rgba(0, 0, 0, 0.36);
+    --sombra-lg: 0 20px 44px rgba(0, 0, 0, 0.42);
+}
