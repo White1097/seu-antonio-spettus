@@ -891,3 +891,32 @@
         overflow:visible;
     }
 }
+
+/* =====================================================
+   V3.4.1 — categorias em uma única linha
+   Remove definitivamente qualquer barra vertical.
+===================================================== */
+.comanda2-categorias{
+    box-sizing:border-box;
+    flex:0 0 auto;
+    min-height:68px;
+    max-height:68px;
+    align-items:center;
+    flex-wrap:nowrap;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+    touch-action:pan-x;
+}
+
+.comanda2-categorias::-webkit-scrollbar{
+    width:0;
+    height:0;
+    display:none;
+}
+
+.comanda2-categoria{
+    flex:0 0 auto;
+    white-space:nowrap;
+}

@@ -17,6 +17,7 @@ import {
 
 import { useAuth } from '../../../context/AuthContext';
 import { useTheme } from '../../../context/ThemeContext';
+import { LOGO_LOCAL_PADRAO } from '../../../services/configuracoes';
 import './Sidebar.css';
 
 const CHAVE_SCROLL_MENU = 'spettus-sidebar-menu-scroll';
@@ -130,7 +131,15 @@ function Sidebar({
 
             <aside className={aberta ? 'sidebar aberta' : 'sidebar'}>
                 <div className="sidebar-logo">
-                    <img src={logoUrl} alt={nomeSistema} />
+                    <img
+                        src={logoUrl || LOGO_LOCAL_PADRAO}
+                        alt={nomeSistema}
+                        onError={(evento) => {
+                            if (evento.currentTarget.src !== LOGO_LOCAL_PADRAO) {
+                                evento.currentTarget.src = LOGO_LOCAL_PADRAO;
+                            }
+                        }}
+                    />
                 </div>
 
                 <nav ref={menuRef} className="sidebar-menu">

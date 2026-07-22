@@ -1,9 +1,11 @@
 import { supabase } from './supabase';
 
+export const LOGO_LOCAL_PADRAO = `${import.meta.env.BASE_URL}logo-seu-antonio.png`;
+
 export const CONFIGURACAO_PADRAO = {
     id: 1,
     nome_sistema: 'Seu Antônio Spettus',
-    logo_url: '/logo-seu-antonio.png',
+    logo_url: LOGO_LOCAL_PADRAO,
     tema: 'claro',
     cor_primaria: '#3A083E',
     cor_secundaria: '#D4AF37',

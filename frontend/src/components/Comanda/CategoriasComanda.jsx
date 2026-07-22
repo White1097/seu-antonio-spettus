@@ -1,12 +1,33 @@
+import { useRef } from 'react';
+
 function CategoriasComanda({
     categorias,
     categoriaAtiva,
     selecionarCategoria
 }) {
+    const categoriasRef = useRef(null);
+
+    function rolarCategorias(evento) {
+        const elemento = categoriasRef.current;
+
+        if (!elemento || Math.abs(evento.deltaY) <= Math.abs(evento.deltaX)) {
+            return;
+        }
+
+        if (elemento.scrollWidth <= elemento.clientWidth) {
+            return;
+        }
+
+        evento.preventDefault();
+        elemento.scrollLeft += evento.deltaY;
+    }
+
     return (
         <nav
+            ref={categoriasRef}
             className="comanda2-categorias"
             aria-label="Categorias de produtos"
+            onWheel={rolarCategorias}
         >
             <button
                 type="button"
@@ -15,9 +36,7 @@ function CategoriasComanda({
                         ? 'comanda2-categoria ativa'
                         : 'comanda2-categoria'
                 }
-                onClick={() =>
-                    selecionarCategoria('todos')
-                }
+                onClick={() => selecionarCategoria('todos')}
             >
                 Todos
             </button>
@@ -31,9 +50,7 @@ function CategoriasComanda({
                             ? 'comanda2-categoria ativa'
                             : 'comanda2-categoria'
                     }
-                    onClick={() =>
-                        selecionarCategoria(categoria)
-                    }
+                    onClick={() => selecionarCategoria(categoria)}
                 >
                     {categoria}
                 </button>
