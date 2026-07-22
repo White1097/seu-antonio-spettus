@@ -1,11 +1,17 @@
 .comanda2{
-    min-height:100vh;
+    height:100vh;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
     padding:24px;
+    padding-bottom:24px;
+    overflow:hidden;
     background:#f6f3ef;
     color:#251f24;
 }
 
 .comanda2-cabecalho{
+    flex:0 0 auto;
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -107,39 +113,48 @@
 }
 
 .comanda2-layout{
+    flex:1 1 auto;
+    min-height:0;
     display:grid;
-    grid-template-columns:minmax(0, 1.65fr) minmax(340px, .85fr);
+    grid-template-columns:minmax(520px, 1fr) minmax(380px, 420px);
     gap:22px;
-    align-items:start;
+    align-items:stretch;
+    overflow:hidden;
 }
 
 .comanda2-esquerda,
 .comanda2-direita{
     min-width:0;
+    min-height:0;
 }
 
 .comanda2-esquerda{
     display:flex;
     flex-direction:column;
     gap:18px;
+    overflow:hidden;
 }
 
 .comanda2-direita{
-    position:sticky;
-    top:22px;
     display:flex;
     flex-direction:column;
     gap:18px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    overscroll-behavior:contain;
+    scrollbar-gutter:stable;
+    padding-right:8px;
+    padding-bottom:8px;
 }
 
 /* =====================================================
-   CORREÇÃO — BARRA DE CATEGORIAS
-   Mantém somente a rolagem horizontal.
+   CATEGORIAS
+   Apenas rolagem horizontal, nunca vertical.
 ===================================================== */
 .comanda2-categorias{
+    flex:0 0 auto;
     width:100%;
     min-width:0;
-    min-height:70px;
     display:flex;
     align-items:center;
     flex-wrap:nowrap;
@@ -154,7 +169,6 @@
     background:#fff;
     box-shadow:0 10px 28px rgba(58,8,62,.05);
     scrollbar-width:thin;
-    scrollbar-gutter:stable;
 }
 
 .comanda2-categorias::-webkit-scrollbar{
@@ -167,11 +181,11 @@
 
 .comanda2-categorias::-webkit-scrollbar-thumb{
     border-radius:999px;
-    background:rgba(58,8,62,.42);
+    background:rgba(58,8,62,.38);
 }
 
 .comanda2-categorias::-webkit-scrollbar-thumb:hover{
-    background:rgba(58,8,62,.62);
+    background:rgba(58,8,62,.58);
 }
 
 .comanda2-categoria{
@@ -204,17 +218,23 @@
     box-shadow:0 8px 18px rgba(58,8,62,.18);
 }
 
-.comanda2-produtos,
-.comanda2-carrinho,
-.comanda2-resumo{
+/* =====================================================
+   PRODUTOS
+   A rolagem vertical fica somente aqui.
+===================================================== */
+.comanda2-produtos{
+    flex:1 1 auto;
+    min-width:0;
+    min-height:0;
+    padding:22px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    overscroll-behavior:contain;
+    scrollbar-gutter:stable;
     border:1px solid #eadfce;
     border-radius:20px;
     background:#fff;
     box-shadow:0 14px 35px rgba(58,8,62,.06);
-}
-
-.comanda2-produtos{
-    padding:22px;
 }
 
 .comanda2-produtos-topo{
@@ -262,9 +282,11 @@
 }
 
 .comanda2-grid-produtos{
+    min-width:0;
     display:grid;
     grid-template-columns:repeat(3, minmax(0, 1fr));
     gap:14px;
+    align-content:start;
 }
 
 .comanda2-produto{
@@ -276,12 +298,7 @@
     padding:17px;
     border:1px solid #e7ddd1;
     border-radius:15px;
-    background:
-        linear-gradient(
-            180deg,
-            #ffffff 0%,
-            #fdfbf8 100%
-        );
+    background:linear-gradient(180deg,#ffffff 0%,#fdfbf8 100%);
     color:#251f24;
     text-align:left;
     cursor:pointer;
@@ -333,6 +350,25 @@
     border-radius:9px;
     background:#3A083E;
     color:#fff;
+    transition:
+        transform .12s ease,
+        background .12s ease,
+        color .12s ease;
+}
+
+.comanda2-produto:active{
+    transform:translateY(1px) scale(.97);
+    border-color:#3A083E;
+    box-shadow:
+        0 3px 8px rgba(58,8,62,.16),
+        inset 0 2px 5px rgba(58,8,62,.08);
+    background:#f8f1f8;
+}
+
+.comanda2-produto:active .comanda2-produto-rodape svg{
+    transform:scale(.88);
+    background:#D4AF37;
+    color:#3A083E;
 }
 
 .comanda2-sem-produtos,
@@ -345,11 +381,24 @@
     text-align:center;
 }
 
+/* =====================================================
+   CARRINHO
+===================================================== */
+.comanda2-carrinho,
+.comanda2-resumo{
+    flex:0 0 auto;
+    min-width:0;
+    border:1px solid #eadfce;
+    border-radius:20px;
+    background:#fff;
+    box-shadow:0 14px 35px rgba(58,8,62,.06);
+}
+
 .comanda2-carrinho{
-    max-height:58vh;
     display:flex;
     flex-direction:column;
     padding:21px;
+    overflow:visible;
 }
 
 .comanda2-carrinho > h2{
@@ -357,11 +406,11 @@
 }
 
 .comanda2-itens{
+    min-height:0;
     display:flex;
     flex-direction:column;
     gap:13px;
-    overflow-y:auto;
-    padding-right:4px;
+    overflow:visible;
 }
 
 .comanda2-item{
@@ -407,15 +456,19 @@
 }
 
 .comanda2-quantidade button{
+    position:relative;
+    z-index:2;
     width:31px;
     height:31px;
     display:grid;
     place-items:center;
+    flex:0 0 auto;
     border:1px solid #d8cabb;
     border-radius:9px;
     background:#fff;
     color:#3A083E;
     cursor:pointer;
+    touch-action:manipulation;
 }
 
 .comanda2-quantidade strong{
@@ -452,19 +505,29 @@
 }
 
 .comanda2-remover{
-    width:34px;
-    height:34px;
+    position:relative;
+    z-index:2;
+    width:38px;
+    height:38px;
+    min-width:38px;
+    min-height:38px;
     display:grid;
     place-items:center;
+    flex:0 0 auto;
     border:1px solid #efb4b4;
     border-radius:9px;
     background:#fff;
     color:#a52a2a;
     cursor:pointer;
+    touch-action:manipulation;
 }
 
+/* =====================================================
+   RESUMO
+===================================================== */
 .comanda2-resumo{
-    padding:21px;
+    padding:21px 21px 24px;
+    overflow:visible;
 }
 
 .comanda2-resumo > h2{
@@ -553,17 +616,14 @@
 }
 
 .comanda2-finalizar{
+    position:static;
     width:100%;
     min-height:50px;
-    margin-top:18px;
+    display:block;
+    margin:18px 0 0;
     border:0;
     border-radius:12px;
-    background:
-        linear-gradient(
-            135deg,
-            #3A083E,
-            #5b1761
-        );
+    background:linear-gradient(135deg,#3A083E,#5b1761);
     color:#fff;
     font-size:15px;
     font-weight:900;
@@ -577,6 +637,9 @@
     box-shadow:none;
 }
 
+/* =====================================================
+   MODAL DE PAGAMENTO
+===================================================== */
 .comanda2-modal-overlay{
     position:fixed;
     inset:0;
@@ -678,19 +741,76 @@
     cursor:pointer;
 }
 
-@media(max-width:1200px){
+/* =====================================================
+   EFEITOS DE CLIQUE
+===================================================== */
+.comanda2-categoria:active,
+.comanda2-voltar:active,
+.comanda2-quantidade button:active,
+.comanda2-remover:active,
+.comanda2-botoes button:active,
+.comanda2-finalizar:active,
+.comanda2-modal-fechar:active,
+.comanda2-formas-pagamento button:active,
+.comanda2-modal-cancelar:active{
+    transform:scale(.95);
+}
+
+.comanda2-quantidade button,
+.comanda2-remover,
+.comanda2-botoes button,
+.comanda2-finalizar,
+.comanda2-modal-fechar,
+.comanda2-modal-cancelar{
+    transition:
+        transform .12s ease,
+        background .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease;
+}
+
+/* =====================================================
+   TABLETS E TELAS MENORES
+===================================================== */
+@media(max-width:1180px){
+    .comanda2{
+        height:auto;
+        min-height:100vh;
+        overflow:visible;
+    }
+
     .comanda2-layout{
         grid-template-columns:1fr;
+        overflow:visible;
+    }
+
+    .comanda2-esquerda{
+        overflow:visible;
+    }
+
+    .comanda2-produtos{
+        overflow:visible;
     }
 
     .comanda2-direita{
-        position:static;
         display:grid;
-        grid-template-columns:1fr 1fr;
+        grid-template-columns:minmax(0, 1fr) minmax(340px, .8fr);
+        align-items:start;
+        overflow:visible;
+        padding-right:0;
+        padding-bottom:0;
+        scrollbar-gutter:auto;
     }
 
     .comanda2-carrinho{
-        max-height:none;
+        min-height:220px;
+    }
+
+    .comanda2-itens{
+        max-height:55vh;
+        overflow-y:auto;
+        overscroll-behavior:contain;
+        padding-right:4px;
     }
 }
 
@@ -765,434 +885,9 @@
     .comanda2-formas-pagamento{
         grid-template-columns:1fr;
     }
-}
 
-/* =====================================================
-   EFEITOS VISUAIS DE CLIQUE
-===================================================== */
-
-.comanda2-produto:active{
-    transform:translateY(1px) scale(.97);
-    border-color:#3A083E;
-    box-shadow:
-        0 3px 8px rgba(58,8,62,.16),
-        inset 0 2px 5px rgba(58,8,62,.08);
-    background:#f8f1f8;
-}
-
-.comanda2-produto:active .comanda2-produto-rodape svg{
-    transform:scale(.88);
-    background:#D4AF37;
-    color:#3A083E;
-}
-
-.comanda2-produto-rodape svg{
-    transition:
-        transform .12s ease,
-        background .12s ease,
-        color .12s ease;
-}
-
-.comanda2-categoria:active,
-.comanda2-voltar:active,
-.comanda2-quantidade button:active,
-.comanda2-remover:active,
-.comanda2-botoes button:active,
-.comanda2-finalizar:active,
-.comanda2-modal-fechar:active,
-.comanda2-formas-pagamento button:active,
-.comanda2-modal-cancelar:active{
-    transform:scale(.95);
-}
-
-.comanda2-quantidade button,
-.comanda2-remover,
-.comanda2-botoes button,
-.comanda2-finalizar,
-.comanda2-modal-fechar,
-.comanda2-modal-cancelar{
-    transition:
-        transform .12s ease,
-        background .2s ease,
-        border-color .2s ease,
-        box-shadow .2s ease;
-}
-
-/* Mantém o resumo e o botão de fechamento sempre acessíveis no desktop. */
-@media (min-width: 901px) {
-    .comanda2-direita {
-        position: sticky;
-        top: 24px;
-        max-height: calc(100vh - 48px);
-        display: grid;
-        grid-template-rows: minmax(0, 1fr) auto;
-        overflow: hidden;
-    }
-
-    .comanda2-carrinho {
-        min-height: 0;
-        max-height: none;
-        overflow: hidden;
-    }
-
-    .comanda2-itens {
-        min-height: 0;
-        overflow-y: auto;
-    }
-
-    .comanda2-resumo {
-        background: #fff;
-        border-top: 1px solid #eee5db;
-    }
-}
-
-/* Correções de estabilidade do layout da comanda */
-.comanda2 { min-height: auto; padding-bottom: 40px; }
-.comanda2-layout { grid-template-columns: minmax(520px, 1.55fr) minmax(360px, .85fr); }
-.comanda2-esquerda { min-width: 0; overflow: visible; }
-.comanda2-produtos { min-width: 0; }
-.comanda2-grid-produtos { align-content: start; }
-.comanda2-resumo { overflow: visible; padding-bottom: 24px; }
-.comanda2-finalizar { position: static; display: block; margin-bottom: 0; }
-
-@media (min-width: 1201px) {
-    .comanda2-direita { max-height: calc(100vh - 150px); }
-}
-
-@media (max-width: 1200px) {
-    .comanda2-layout { grid-template-columns: 1fr; }
-    .comanda2-direita { max-height: none; overflow: visible; }
-}
-
-/* =====================================================
-   CORREÇÃO FINAL — LAYOUT DA COMANDA
-   Mantém pedido e resumo visíveis sem esconder produtos.
-===================================================== */
-.comanda2-layout{
-    grid-template-columns:minmax(500px, 1fr) minmax(360px, 410px);
-    align-items:start;
-}
-
-.comanda2-esquerda,
-.comanda2-produtos,
-.comanda2-grid-produtos{
-    min-width:0;
-}
-
-.comanda2-direita{
-    position:sticky;
-    top:20px;
-    min-width:0;
-    max-height:calc(100vh - 40px);
-    display:flex;
-    flex-direction:column;
-    gap:16px;
-    overflow:visible;
-}
-
-.comanda2-carrinho{
-    min-height:150px;
-    max-height:42vh;
-    overflow:hidden;
-    flex:0 1 auto;
-}
-
-.comanda2-itens{
-    min-height:0;
-    max-height:calc(42vh - 75px);
-    overflow-y:auto;
-    overscroll-behavior:contain;
-}
-
-.comanda2-resumo{
-    flex:0 0 auto;
-    overflow:visible;
-}
-
-@media(max-width:1180px){
-    .comanda2-layout{
-        grid-template-columns:1fr;
-    }
-
-    .comanda2-direita{
-        position:static;
-        max-height:none;
-        display:grid;
-        grid-template-columns:minmax(0, 1fr) minmax(340px, .8fr);
-        align-items:start;
-        overflow:visible;
-    }
-
-    .comanda2-carrinho{
-        min-height:220px;
-        max-height:none;
-        overflow:visible;
-    }
-
-    .comanda2-itens{
-        max-height:55vh;
-        overflow-y:auto;
-    }
-}
-
-@media(max-width:760px){
-    .comanda2-direita{
-        grid-template-columns:1fr;
-    }
-
-    .comanda2-carrinho,
     .comanda2-itens{
         max-height:none;
         overflow:visible;
-    }
-}
-
-/* =====================================================
-   V1.0.4 — estabilidade do painel da comanda
-   Evita que a lista de itens adicionados fique reduzida
-   a uma faixa ou desapareça durante a rolagem.
-===================================================== */
-.comanda2-direita{
-    max-height:none !important;
-    overflow:visible !important;
-}
-
-.comanda2-carrinho{
-    min-height:240px !important;
-    max-height:none !important;
-    overflow:visible !important;
-    flex:none !important;
-}
-
-.comanda2-itens{
-    min-height:0;
-    max-height:360px !important;
-    overflow-y:auto !important;
-    overscroll-behavior:contain;
-}
-
-@media (min-width:1181px){
-    .comanda2-layout{
-        grid-template-columns:minmax(520px, 1fr) minmax(380px, 420px) !important;
-    }
-
-    .comanda2-direita{
-        position:sticky;
-        top:20px;
-    }
-}
-
-@media (max-width:1180px){
-    .comanda2-layout{
-        grid-template-columns:1fr !important;
-    }
-
-    .comanda2-direita{
-        position:static !important;
-        display:grid;
-        grid-template-columns:minmax(0, 1fr) minmax(340px, .8fr);
-        align-items:start;
-    }
-}
-
-@media (max-width:760px){
-    .comanda2-direita{
-        grid-template-columns:1fr;
-    }
-
-    .comanda2-itens{
-        max-height:none !important;
-    }
-}
-
-/* =====================================================
-   V1.0.5 — rolagens independentes e ações do carrinho
-===================================================== */
-.comanda2-remover,
-.comanda2-quantidade button{
-    position:relative;
-    z-index:2;
-    flex:0 0 auto;
-    touch-action:manipulation;
-}
-
-.comanda2-remover{
-    min-width:38px;
-    min-height:38px;
-}
-
-@media (min-width:1181px){
-    .comanda2{
-        height:calc(100vh - 150px);
-        min-height:620px;
-        padding-bottom:0;
-        overflow:hidden;
-    }
-
-    .comanda2-layout{
-        height:calc(100% - 120px);
-        min-height:0;
-        align-items:stretch;
-    }
-
-    .comanda2-esquerda{
-        min-height:0;
-        overflow-y:auto;
-        overscroll-behavior:contain;
-        padding-right:6px;
-    }
-
-    .comanda2-direita{
-        position:static !important;
-        height:100%;
-        min-height:0;
-        max-height:none !important;
-        display:grid;
-        grid-template-rows:minmax(0, 1fr) auto;
-        overflow:hidden !important;
-    }
-
-    .comanda2-carrinho{
-        min-height:0 !important;
-        max-height:none !important;
-        height:100%;
-        overflow:hidden !important;
-        flex:none !important;
-    }
-
-    .comanda2-itens{
-        min-height:0;
-        max-height:none !important;
-        height:100%;
-        overflow-y:auto !important;
-        overscroll-behavior:contain;
-        padding-right:8px;
-    }
-
-    .comanda2-resumo{
-        min-height:0;
-        max-height:45vh;
-        overflow-y:auto !important;
-        overscroll-behavior:contain;
-    }
-}
-
-/* =====================================================
-   V1.0.6 — duas rolagens independentes
-   1) produtos à esquerda
-   2) pedido + resumo + fechar conta à direita
-===================================================== */
-@media (min-width:1181px){
-    .comanda2{
-        height:100vh !important;
-        min-height:0 !important;
-        display:flex;
-        flex-direction:column;
-        padding-bottom:24px !important;
-        overflow:hidden !important;
-    }
-
-    .comanda2-cabecalho{
-        flex:0 0 auto;
-    }
-
-    .comanda2-layout{
-        flex:1 1 auto;
-        height:auto !important;
-        min-height:0;
-        grid-template-columns:minmax(520px, 1fr) minmax(380px, 420px) !important;
-        align-items:stretch;
-        overflow:hidden;
-    }
-
-    .comanda2-esquerda{
-        height:100%;
-        min-height:0;
-        overflow-y:auto !important;
-        overflow-x:hidden;
-        overscroll-behavior:contain;
-        scrollbar-gutter:stable;
-        padding-right:8px;
-    }
-
-    .comanda2-direita{
-        position:static !important;
-        height:100%;
-        min-height:0;
-        max-height:none !important;
-        display:flex !important;
-        flex-direction:column;
-        gap:18px;
-        overflow-y:auto !important;
-        overflow-x:hidden;
-        overscroll-behavior:contain;
-        scrollbar-gutter:stable;
-        padding-right:8px;
-        padding-bottom:8px;
-    }
-
-    .comanda2-carrinho{
-        min-height:auto !important;
-        max-height:none !important;
-        height:auto !important;
-        overflow:visible !important;
-        flex:0 0 auto !important;
-    }
-
-    .comanda2-itens{
-        min-height:0;
-        max-height:none !important;
-        height:auto !important;
-        overflow:visible !important;
-        padding-right:0;
-    }
-
-    .comanda2-resumo{
-        flex:0 0 auto;
-        min-height:auto;
-        max-height:none !important;
-        overflow:visible !important;
-        padding-bottom:24px !important;
-    }
-
-    .comanda2-finalizar{
-        position:static !important;
-        width:100%;
-        margin:18px 0 0 !important;
-    }
-}
-
-
-/* =====================================================
-   V1.0.7 — correção real da barra ao lado das categorias
-   A rolagem vertical fica somente na área de produtos.
-===================================================== */
-@media (min-width:1181px){
-    .comanda2-esquerda{
-        display:flex !important;
-        flex-direction:column;
-        height:100%;
-        min-height:0;
-        overflow:hidden !important;
-        padding-right:0;
-        scrollbar-gutter:auto;
-    }
-
-    .comanda2-categorias{
-        flex:0 0 auto;
-        width:100%;
-        min-width:0;
-        overflow-x:auto !important;
-        overflow-y:hidden !important;
-        white-space:nowrap;
-    }
-
-    .comanda2-produtos{
-        flex:1 1 auto;
-        min-height:0;
-        overflow-y:auto !important;
-        overflow-x:hidden !important;
-        overscroll-behavior:contain;
-        scrollbar-gutter:stable;
     }
 }
