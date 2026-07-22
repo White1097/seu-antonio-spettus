@@ -21,6 +21,9 @@ function Login() {
     const [carregando, setCarregando] = useState(false);
     const [erro, setErro] = useState('');
 
+    const logoSistema =
+        `${import.meta.env.BASE_URL}logo-seu-antonio.png`;
+
     async function entrarNoSistema(evento) {
         evento.preventDefault();
 
@@ -39,12 +42,17 @@ function Login() {
             );
 
             if (error) {
-                if (error.message === 'Invalid login credentials') {
+                if (
+                    error.message ===
+                    'Invalid login credentials'
+                ) {
                     setErro('E-mail ou senha incorretos.');
                 } else if (
                     error.message === 'Email not confirmed'
                 ) {
-                    setErro('Este usuário ainda não foi confirmado.');
+                    setErro(
+                        'Este usuário ainda não foi confirmado.'
+                    );
                 } else {
                     setErro(
                         error.message ||
@@ -77,7 +85,7 @@ function Login() {
             <section className="login-apresentacao">
                 <div className="login-marca">
                     <img
-                        src="/logo-seu-antonio.png"
+                        src={logoSistema}
                         alt="Seu Antônio Spettus"
                     />
                 </div>
@@ -101,7 +109,10 @@ function Login() {
 
                 <div className="login-detalhe">
                     <span />
-                    <strong>Seu Antônio Spettus</strong>
+
+                    <strong>
+                        Seu Antônio Spettus
+                    </strong>
                 </div>
             </section>
 
@@ -110,7 +121,7 @@ function Login() {
                     <header className="login-cabecalho">
                         <div className="login-logo-mobile">
                             <img
-                                src="/logo-seu-antonio.png"
+                                src={logoSistema}
                                 alt="Seu Antônio Spettus"
                             />
                         </div>
@@ -148,7 +159,9 @@ function Login() {
                                     type="email"
                                     value={email}
                                     onChange={evento =>
-                                        setEmail(evento.target.value)
+                                        setEmail(
+                                            evento.target.value
+                                        )
                                     }
                                     placeholder="admin@seuantonio.com"
                                     autoComplete="email"
@@ -175,7 +188,9 @@ function Login() {
                                     }
                                     value={senha}
                                     onChange={evento =>
-                                        setSenha(evento.target.value)
+                                        setSenha(
+                                            evento.target.value
+                                        )
                                     }
                                     placeholder="Digite sua senha"
                                     autoComplete="current-password"
@@ -219,6 +234,7 @@ function Login() {
                                         className="icone-carregando"
                                         size={21}
                                     />
+
                                     Entrando...
                                 </>
                             ) : (
