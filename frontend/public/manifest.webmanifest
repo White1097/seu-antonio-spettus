@@ -2,14 +2,15 @@
   "name": "Seu Antônio Spettus",
   "short_name": "Spettus",
   "description": "Sistema de comandas e gestão do Seu Antônio Spettus",
-  "start_url": "/",
+  "start_url": "./#/",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#3a083e",
   "theme_color": "#3a083e",
   "orientation": "any",
   "icons": [
     {
-      "src": "/logo-seu-antonio.png",
+      "src": "logo-seu-antonio.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
