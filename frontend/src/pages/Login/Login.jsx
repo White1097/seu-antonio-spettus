@@ -9,11 +9,14 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { CONFIGURACAO_PADRAO } from '../../services/configuracoes';
 import './Login.css';
 
 function Login() {
     const navigate = useNavigate();
     const { login } = useAuth();
+    const { logoUrl, nomeSistema } = useTheme();
 
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
@@ -21,8 +24,8 @@ function Login() {
     const [carregando, setCarregando] = useState(false);
     const [erro, setErro] = useState('');
 
-    const logoSistema =
-        `${import.meta.env.BASE_URL}logo-seu-antonio.png`;
+    const logoSistema = logoUrl || CONFIGURACAO_PADRAO.logo_url;
+    const nomeExibido = nomeSistema || CONFIGURACAO_PADRAO.nome_sistema;
 
     async function entrarNoSistema(evento) {
         evento.preventDefault();
@@ -42,17 +45,10 @@ function Login() {
             );
 
             if (error) {
-                if (
-                    error.message ===
-                    'Invalid login credentials'
-                ) {
+                if (error.message === 'Invalid login credentials') {
                     setErro('E-mail ou senha incorretos.');
-                } else if (
-                    error.message === 'Email not confirmed'
-                ) {
-                    setErro(
-                        'Este usuário ainda não foi confirmado.'
-                    );
+                } else if (error.message === 'Email not confirmed') {
+                    setErro('Este usuário ainda não foi confirmado.');
                 } else {
                     setErro(
                         error.message ||
@@ -63,15 +59,9 @@ function Login() {
                 return;
             }
 
-            navigate('/', {
-                replace: true
-            });
+            navigate('/', { replace: true });
         } catch (erroLogin) {
-            console.error(
-                'Erro ao entrar no sistema:',
-                erroLogin
-            );
-
+            console.error('Erro ao entrar no sistema:', erroLogin);
             setErro(
                 'Não foi possível conectar ao sistema. Tente novamente.'
             );
@@ -84,10 +74,7 @@ function Login() {
         <main className="login-page">
             <section className="login-apresentacao">
                 <div className="login-marca">
-                    <img
-                        src={logoSistema}
-                        alt="Seu Antônio Spettus"
-                    />
+                    <img src={logoSistema} alt={nomeExibido} />
                 </div>
 
                 <div className="login-texto">
@@ -109,10 +96,7 @@ function Login() {
 
                 <div className="login-detalhe">
                     <span />
-
-                    <strong>
-                        Seu Antônio Spettus
-                    </strong>
+                    <strong>{nomeExibido}</strong>
                 </div>
             </section>
 
@@ -120,16 +104,11 @@ function Login() {
                 <div className="login-card">
                     <header className="login-cabecalho">
                         <div className="login-logo-mobile">
-                            <img
-                                src={logoSistema}
-                                alt="Seu Antônio Spettus"
-                            />
+                            <img src={logoSistema} alt={nomeExibido} />
                         </div>
 
                         <span>Área da equipe</span>
-
                         <h2>Bem-vindo</h2>
-
                         <p>
                             Entre com o login fornecido pelo
                             administrador.
@@ -150,18 +129,13 @@ function Login() {
                             <span>E-mail</span>
 
                             <div className="login-input-container">
-                                <Mail
-                                    size={19}
-                                    aria-hidden="true"
-                                />
+                                <Mail size={19} aria-hidden="true" />
 
                                 <input
                                     type="email"
                                     value={email}
-                                    onChange={evento =>
-                                        setEmail(
-                                            evento.target.value
-                                        )
+                                    onChange={(evento) =>
+                                        setEmail(evento.target.value)
                                     }
                                     placeholder="admin@seuantonio.com"
                                     autoComplete="email"
@@ -175,22 +149,13 @@ function Login() {
                             <span>Senha</span>
 
                             <div className="login-input-container">
-                                <LockKeyhole
-                                    size={19}
-                                    aria-hidden="true"
-                                />
+                                <LockKeyhole size={19} aria-hidden="true" />
 
                                 <input
-                                    type={
-                                        mostrarSenha
-                                            ? 'text'
-                                            : 'password'
-                                    }
+                                    type={mostrarSenha ? 'text' : 'password'}
                                     value={senha}
-                                    onChange={evento =>
-                                        setSenha(
-                                            evento.target.value
-                                        )
+                                    onChange={(evento) =>
+                                        setSenha(evento.target.value)
                                     }
                                     placeholder="Digite sua senha"
                                     autoComplete="current-password"
@@ -202,9 +167,8 @@ function Login() {
                                     className="botao-mostrar-senha"
                                     type="button"
                                     onClick={() =>
-                                        setMostrarSenha(
-                                            valorAtual =>
-                                                !valorAtual
+                                        setMostrarSenha((valorAtual) =>
+                                            !valorAtual
                                         )
                                     }
                                     aria-label={
@@ -234,7 +198,6 @@ function Login() {
                                         className="icone-carregando"
                                         size={21}
                                     />
-
                                     Entrando...
                                 </>
                             ) : (
@@ -248,10 +211,7 @@ function Login() {
                             Acesso exclusivo para funcionários
                             autorizados.
                         </p>
-
-                        <small>
-                            Seu Antônio Spettus © 2026
-                        </small>
+                        <small>{nomeExibido} © 2026</small>
                     </footer>
                 </div>
             </section>
